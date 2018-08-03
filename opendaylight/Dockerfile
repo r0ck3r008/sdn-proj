@@ -14,4 +14,5 @@ RUN tar -xvf /root/karaf-0.7.3.tar.gz -C /root
 
 #change /etc/profile
 RUN echo 'export TERM=xterm-color' >> /etc/profile
+RUN echo 'alias cl=clear' >> /etc/profile
 
