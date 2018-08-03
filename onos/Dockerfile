@@ -4,7 +4,7 @@ FROM base/archlinux
 RUN pacman -Syy
 
 #download some important packages packages
-RUN pacman --noconfirm -S git sudo binutils fakeroot
+RUN pacman --noconfirm -S git sudo binutils fakeroot tmux
 
 #add user
 RUN useradd -m -s /bin/bash -G wheel user
