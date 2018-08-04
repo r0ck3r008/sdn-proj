@@ -27,6 +27,7 @@ RUN pacman --noconfirm -U /home/user/onos/onos-1.12.0-2-x86_64.pkg.tar.xz
 #append in /etc/profile
 RUN echo 'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/jre' >> /etc/profile
 RUN echo 'export TERM=xterm-color' >> /etc/profile
+RUN echo 'alias cl=clear' >> /etc/profile
 RUN source /etc/profile
 
 #mkdir /home/sdn
