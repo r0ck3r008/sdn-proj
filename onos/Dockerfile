@@ -6,6 +6,9 @@ RUN pacman -Syy
 #download some important packages packages
 RUN pacman --noconfirm -S git sudo binutils fakeroot tmux
 
+#generate locale
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen; locale-gen
+
 #add user
 RUN useradd -m -s /bin/bash -G wheel user
 
