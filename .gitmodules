@@ -1,3 +1,0 @@
-[submodule "ryu"]
-	path = ryu
-	url = git://github.com/osrg/ryu.git
