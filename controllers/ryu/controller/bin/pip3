@@ -1,4 +1,4 @@
-#!/home/naman/sdn/ryu/controller/bin/python3.6
+#!/home/naman/git/sdn-proj/controllers/ryu/controller/bin/python3.6
 
 # -*- coding: utf-8 -*-
 import re

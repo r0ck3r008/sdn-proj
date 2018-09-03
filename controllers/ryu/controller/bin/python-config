@@ -1,4 +1,4 @@
-#!/home/naman/sdn/ryu/controller/bin/python
+#!/home/naman/git/sdn-proj/controllers/ryu/controller/bin/python
 
 import sys
 import getopt
