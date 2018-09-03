@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+v4.28
+-----
+
+* Ryu 4.28
 * Fix convertion of ipv4 to string on i386 and arch
 * mrtlib: Define JSON representation types
 * test\_mrtlib: Test cases for ADD\_PATH
