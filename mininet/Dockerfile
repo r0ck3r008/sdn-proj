@@ -7,7 +7,7 @@ RUN apt-get update
 RUN apt-get -y install vim tmux
 
 #install mininet and required networking tools
-RUN apt-get -y install mininet iproute2 ethtool tcpdump net-tools iputils-ping
+RUN apt-get -y install mininet iproute2 ethtool tcpdump net-tools iputils-ping lsof
 
 #expose ports
 EXPOSE 6633 6653 6640
