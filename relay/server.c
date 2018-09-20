@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#define NEEDS_CONTROLLER_STRUCT
+#define NEEDS_ALL
 
 #include"global_defs.h"
 #include"server.h"
@@ -91,20 +91,43 @@ void *cli_run(void *a)
         if((cmdr=rcv(cli, "receive command from client", retval))==NULL)
         {
             fprintf(stderr, retval);
-            explicit_bzero(retval, sizeof(char)*256);
-            continue;
+            break;
         }
         
         //broadcast or receive output
         if(strcasestr("BROADCAST", cmdr)!=NULL)
         {
             //broadcast query
-            if(broadcast())
+            if(broadcast(cli, cmdr, retval))
+            {
+                fprintf(stderr, retval);
+                _exit(-1);
+                break;
+            }
         }
         else
         {
             //parse packet to find broadcast reply id
 
         }
+    }
+
+    pthread_exit(retval);
+}
+
+int broadcast(struct controller *cli, char *cmds, char *retval)
+{
+    int stat;
+
+    if((stat=pthread_mutex_lock(&speaker))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in locking mutex speaker for %s:%d: %s\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), strerror(stat));
+        return 1;
+    }
+
+    if((stat=pthread_mutex_unlock(&speaker))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in unlocking mutex speaker for %s:%d: %s\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), strerror(stat));
+        return 1;
     }
 }
