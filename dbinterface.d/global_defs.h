@@ -30,7 +30,7 @@ int server_sock;
 
     #ifdef NEEDS_MUTEX
         #include<pthread.h>
-        extern pthread_mutex_t mutex;
+        pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
     #endif
 
 #endif
