@@ -1,4 +1,4 @@
-#define NEEDS_CONTROLLER_STRUCT
+#define NEEDS_STRUCT
 
 #include"global_defs.h"
 #include"snd_rcv.h"
