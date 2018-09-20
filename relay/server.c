@@ -1,8 +1,9 @@
 #define _GNU_SOURCE
-#define NEEDS_ALL
+#define NEEDS_STRUCT
 
 #include"global_defs.h"
 #include"server.h"
+#include"broadcast.h"
 #include"allocate.h"
 #include"snd_rcv.h"
 
@@ -12,6 +13,12 @@
 #include<unistd.h>
 #include<pthread.h>
 #include<errno.h>
+
+struct alarm_struct
+{
+    int time;
+    int *a;
+};
 
 int create_sock(char *argv1)
 {
@@ -44,28 +51,42 @@ int create_sock(char *argv1)
 
 int server_workings()
 {
-    int stat;
+    int stat, a=1;
     char *retval;
     pthread_t tid[10];
     cli=(struct controller *)allocate("struct controller", 10);
     socklen_t len=sizeof(struct controller);
 
-    for(int i=0; i<10; i++)
+    for(cli_num=0; a; cli_num++)
     {
-        if((cli[i].sock=accept(server_sock, (struct sockaddr *)&cli[i].addr, &len))==-1)
+        if(cli_num==0)
         {
-            fprintf(stderr, "\n[-]Error in accepting client %d:%s\n", i, strerror(errno));
+            pthread_t alarm_thr;
+            struct alarm_struct a_s;
+            a_s.time=5;
+            a_s.a=&a;
+
+            if((stat=pthread_create(&alarm_thr, NULL, alarm_run, &a_s))!=0)
+            {
+                fprintf(stderr, "\n[-]Error in setting alarm: %s\n", strerror(stat));
+                _exit(-1);
+            }
+        }
+
+        if((cli[cli_num].sock=accept(server_sock, (struct sockaddr *)&cli[cli_num].addr, &len))==-1)
+        {
+            fprintf(stderr, "\n[-]Error in accepting client %d:%s\n", cli_num, strerror(errno));
             continue;
         }
 
-        if((stat=pthread_create(&tid[i], NULL, cli_run, &cli[i]))!=0)
+        if((stat=pthread_create(&tid[cli_num], NULL, cli_run, &cli[cli_num]))!=0)
         {
-            fprintf(stderr, "\n[-]Error in creating thread for %s: %s\n", inet_ntoa(cli[i].addr.sin_addr), strerror(stat));
+            fprintf(stderr, "\n[-]Error in creating thread for %s: %s\n", inet_ntoa(cli[cli_num].addr.sin_addr), strerror(stat));
             continue;
         }
     }
 
-    for(int i=0; i<10; i++)
+    for(int i=0; i<cli_num; i++)
     {
         if((stat=pthread_join(tid[i], (void **)&retval))!=0)
         {
@@ -83,10 +104,11 @@ void *cli_run(void *a)
     struct controller *cli=(struct controller *)a;
     printf("\n[!]Controller %s:%d connected\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port));
     
-    char *cmds, *cmdr, *retval=(char *)allocate("char", 256);
-    
-    for( ;!strcmp(cmdr, "END"); )
+    char *cmds, *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 256);
+    sprintf(cmdr, "start");
+    for( ;strcasestr(cmdr, "END")==NULL; )
     {
+        free(cmdr);
         //receive command
         if((cmdr=rcv(cli, "receive command from client", retval))==NULL)
         {
@@ -98,8 +120,9 @@ void *cli_run(void *a)
         if(strcasestr("BROADCAST", cmdr)!=NULL)
         {
             //broadcast query
-            if(broadcast(cli, cmdr, retval))
+            if(broadcast(cli, cmdr))
             {
+                sprintf(retval, "Error in broadcast");
                 fprintf(stderr, retval);
                 _exit(-1);
                 break;
@@ -115,19 +138,12 @@ void *cli_run(void *a)
     pthread_exit(retval);
 }
 
-int broadcast(struct controller *cli, char *cmds, char *retval)
+void *alarm_run(void *a_struct)
 {
-    int stat;
+    struct alarm_struct a_s= *(struct alarm_struct *)a_struct;
 
-    if((stat=pthread_mutex_lock(&speaker))!=0)
-    {
-        fprintf(stderr, "\n[-]Error in locking mutex speaker for %s:%d: %s\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), strerror(stat));
-        return 1;
-    }
+    sleep(a_s.time);
+    *a_s.a=0;
 
-    if((stat=pthread_mutex_unlock(&speaker))!=0)
-    {
-        fprintf(stderr, "\n[-]Error in unlocking mutex speaker for %s:%d: %s\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), strerror(stat));
-        return 1;
-    }
+    pthread_exit(NULL);
 }
