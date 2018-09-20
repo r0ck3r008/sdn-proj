@@ -9,16 +9,22 @@
 #include<string.h>
 #include<errno.h>
 
-int snd(struct controller *cli, char *cmds, char *reason, char *retval)
+int snd(struct controller *cli, char *cmds, char *reason, char *retval, int free_it)
 {
     if(send(cli->sock, cmds, sizeof(char)*512, 0)==-1)
     {
-        explicit_bzero(retval, sizeof(char)*256);
-        sprintf(retval, "\n[-]Error in sendig %s to %s:%d for %s: %s\n", cmds, inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), reason, strerror(errno));
+        if(retval!=NULL)
+        {
+            explicit_bzero(retval, sizeof(char)*256);
+            sprintf(retval, "\n[-]Error in sendig %s to %s:%d for %s: %s\n", cmds, inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), reason, strerror(errno));
+        }
         return 1;
     }
-
-    free(cmds);
+    
+    if(free_it)
+    {
+        free(cmds);
+    }
     return 0;
 }
 
