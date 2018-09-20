@@ -2,6 +2,7 @@
 #define GLOBAL_DEFS_H
 
 int server_sock;
+int cli_num;
 
     #ifdef NEEDS_ALL
         #define NEEDS_STRUCT
