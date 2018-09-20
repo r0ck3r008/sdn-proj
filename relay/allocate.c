@@ -1,4 +1,4 @@
-#define NEEDS_CONTROLLER_STRUCT
+#define NEEDS_STRUCT
 
 #include"global_defs.h"
 #include"allocate.h"
@@ -21,6 +21,11 @@ void *allocate(char *type, int size)
     {
         ret=malloc(sizeof(struct controller)*size);
         explicit_bzero(ret, sizeof(struct controller)*size);
+    }
+    else if(!strcmp(type, "struct bcast_msg_node"))
+    {
+        ret=malloc(sizeof(struct bcast_msg_node)*size);
+        explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
     }
 
     if(ret==NULL)
