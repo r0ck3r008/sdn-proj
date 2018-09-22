@@ -28,7 +28,7 @@ int *done_bcast_nodes;
             struct controller *sender;
             struct bcast_msg_node *prev;
             struct bcast_msg_node *nxt;
-        } *bcast_start=NULL;
+        } *bcast_start;
 
     #endif
 

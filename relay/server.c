@@ -57,6 +57,7 @@ int server_workings()
     pthread_t tid[10];
     cli=(struct controller *)allocate("struct controller", 10);
     socklen_t len=sizeof(struct controller);
+    bcast_start=NULL;
 
     for(cli_num=0; a; cli_num++)
     {
