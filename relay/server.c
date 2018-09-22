@@ -52,6 +52,7 @@ int create_sock(char *argv1)
 int server_workings()
 {
     int stat, a=1;
+    *done_bcast_nodes=0;
     char *retval;
     pthread_t tid[10];
     cli=(struct controller *)allocate("struct controller", 10);
@@ -73,7 +74,7 @@ int server_workings()
             }
         }
 
-        if((cli[cli_num].sock=accept(server_sock, (struct sockaddr *)&cli[cli_num].addr, &len))==-1)
+        if((cli[cli_num].bcast_sock=accept(server_sock, (struct sockaddr *)&cli[cli_num].addr, &len))==-1)
         {
             fprintf(stderr, "\n[-]Error in accepting client %d:%s\n", cli_num, strerror(errno));
             continue;
@@ -84,6 +85,14 @@ int server_workings()
             fprintf(stderr, "\n[-]Error in creating thread for %s: %s\n", inet_ntoa(cli[cli_num].addr.sin_addr), strerror(stat));
             continue;
         }
+    }
+
+    //start cleanup here
+    pthread_t cleanup;
+    if((stat=pthread_create(&cleanup, NULL, cleanup_run, NULL))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in starting cleanup thread: %s\n", strerror(stat));
+        return 1;
     }
 
     for(int i=0; i<cli_num; i++)
@@ -97,14 +106,32 @@ int server_workings()
         printf("\n[!]Joined to controller at: %s\n", inet_ntoa(cli[i].addr.sin_addr));
         free(retval);
     }
+
+    if((stat=pthread_join(cleanup, NULL))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in joining to cleanup thread: %s\n", strerror(stat));
+        return 1;
+    }
+    printf("\n[!]Pthread_thread joined successfully\n");
+
+    return 0;
 }
 
+//connect back
 void *cli_run(void *a)
 {
     struct controller *cli=(struct controller *)a;
     printf("\n[!]Controller %s:%d connected\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port));
-    
+
     char *cmds, *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 256);
+
+    if(connect_back(cli))
+    {
+        sprintf(retval, "Error in connecting back");
+        fprintf(stderr, retval);
+    }
+
+    sprintf(retval, " ");
     sprintf(cmdr, "start");
     for( ;strcasestr(cmdr, "END")==NULL; )
     {
@@ -122,20 +149,44 @@ void *cli_run(void *a)
             //broadcast query
             if(broadcast(cli, cmdr))
             {
-                sprintf(retval, "Error in broadcast");
+                sprintf(retval, "Error in broadcast:%s", retval);
                 fprintf(stderr, retval);
-                _exit(-1);
                 break;
             }
         }
         else
         {
             //parse packet to find broadcast reply id
+            if(send_pkt_back(cli, (int)strtol(strtok(cmdr, ":"), NULL, 10), strtok(NULL, ":")))
+            {
+                sprintf(retval, "Error in finding bcast pkt:%s", retval);
+                fprintf(stderr, "\n[-]%s\n", retval);
+                break;
+            }
 
         }
     }
 
+    fprintf(stderr, "\n[-]Ending connection with %s:%d\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port));
     pthread_exit(retval);
+}
+
+int connect_back(struct controller *cli)
+{
+    struct sockaddr_in addr;
+    addr.sin_family=AF_INET;
+    addr.sin_port=htons(ntohs(12345));
+    addr.sin_addr.s_addr=inet_addr(inet_ntoa(cli->addr.sin_addr));
+
+    if(connect(cli->sock, (struct sockaddr *)&addr, sizeof(addr))!=-1)
+    {
+        fprintf(stderr, "\n[-]Error in connecting back to %s:%d: %s\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), strerror(errno));
+        return 1;
+    }
+
+    printf("\n[!]Return connection to %s:%d successfull\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+
+    return 0;
 }
 
 void *alarm_run(void *a_struct)
