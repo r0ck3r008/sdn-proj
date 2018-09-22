@@ -3,6 +3,7 @@
 
 int server_sock;
 int cli_num;
+int *done_bcast_nodes;
 
     #ifdef NEEDS_ALL
         #define NEEDS_STRUCT
@@ -15,17 +16,18 @@ int cli_num;
         #include<arpa/inet.h>
         struct controller
         {
-            int sock;
+            int bcast_sock, sock;
             struct sockaddr_in addr;
         } *cli;
         
         struct bcast_msg_node
         {
             int id;
+            int done;
             char *msg;
             struct controller *sender;
-            struct bcast_msg_node *nxt;
             struct bcast_msg_node *prev;
+            struct bcast_msg_node *nxt;
         } *bcast_start=NULL;
 
     #endif
