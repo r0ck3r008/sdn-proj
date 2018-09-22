@@ -9,9 +9,9 @@
 #include<string.h>
 #include<errno.h>
 
-int snd(struct controller *cli, char *cmds, char *reason, char *retval, int free_it)
+int snd(struct controller *cli, char *cmds, char *reason, char *retval, int sock, int free_it)
 {
-    if(send(cli->sock, cmds, sizeof(char)*512, 0)==-1)
+    if(send(sock, cmds, sizeof(char)*512, 0)==-1)
     {
         if(retval!=NULL)
         {
