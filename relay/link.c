@@ -16,9 +16,10 @@ void add_node(struct controller *cli, char *msg, int id)
     struct bcast_msg_node *tmp= (struct bcast_msg_node *)allocate("struct bcast_msg_node", 1);
     tmp->sender=(struct controller *)allocate("struct controller", 1);
     tmp->msg=(char *)allocate("char", 512);
-    tmp->id=id;
 
     //copy contents
+    tmp->id=id;
+    tmp->done=0;
     sprintf(tmp->msg, "%s", msg);
     equate_controllers(tmp->sender, cli);
 
@@ -35,28 +36,22 @@ void add_node(struct controller *cli, char *msg, int id)
         bcast_start->nxt=tmp;
         bcast_start->prev=NULL;
         bcast_start->sender=NULL;
-
-        //connect tmp
-        tmp->prev=bcast_start;
-        tmp->nxt=NULL;
     }
     else
     {
         curr->nxt=tmp;
-        tmp->prev=curr;
-        tmp->nxt=NULL;
     }
     //equate current and tmp
+    tmp->nxt=NULL;
+    tmp->prev=curr;
+
     curr=tmp;
 }
 
 void del_node(int id)
 {
     //init
-    struct bcast_msg_node *curr=bcast_start->nxt;
-
-    //iterate
-    for(curr; curr->id!=id; curr=curr->nxt){}
+    struct bcast_msg_node *curr=iterate(id);
 
     //links
     curr->prev->nxt=curr->nxt;
@@ -71,8 +66,26 @@ void del_node(int id)
     free(curr);
 }
 
+struct bcast_msg_node *iterate(int id)
+{
+    struct bcast_msg_node *curr=bcast_start->nxt;
+
+    if(id==-1)
+    {
+        //iterate to end;
+        for(curr; curr->nxt!=NULL; curr=curr->nxt){}
+    }
+    else
+    {
+        for(curr; curr->id!=id; curr=curr->nxt){}
+    }
+
+    return curr;
+}
+
 void equate_controllers(struct controller *dest, struct controller *src)
 {
+    dest->bcast_sock=src->bcast_sock;
     dest->sock=src->sock;
     dest->addr.sin_port=htons(ntohs(src->addr.sin_port));
     dest->addr.sin_addr.s_addr=inet_addr(inet_ntoa(src->addr.sin_addr));
