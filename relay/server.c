@@ -49,7 +49,7 @@ int create_sock(char *argv1)
     return 0;
 }
 
-int server_workings()
+int server_workings(char *argv2)
 {
     int stat, a=1;
     *done_bcast_nodes=0;
@@ -88,6 +88,12 @@ int server_workings()
         }
     }
 
+    //publish
+    if(publish(argv2))
+    {
+        return 1;
+    }
+
     //start cleanup here
     pthread_t cleanup;
     if((stat=pthread_create(&cleanup, NULL, cleanup_run, NULL))!=0)
@@ -114,6 +120,29 @@ int server_workings()
         return 1;
     }
     printf("\n[!]Pthread_thread joined successfully\n");
+
+    return 0;
+}
+
+//publish
+int publish(char *path)
+{
+
+    FILE *f;
+    if((f=fopen(path, "w"))==NULL)
+    {
+        fprintf(stderr, "\n[-]Error in opening %s for writing: %s\n", path, strerror(errno));
+        return 1;
+    }
+
+    for(int i=0; i<cli_num; i++)
+    {
+        fprintf(f, "%s:%d", inet_ntoa(cli[i].addr.sin_addr), ntohs(cli[i].addr.sin_port));
+        if(i!=cli_num-1)
+        {
+            fprintf(f, "\n");
+        }
+    }
 
     return 0;
 }
