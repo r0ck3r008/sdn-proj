@@ -150,6 +150,7 @@ int publish(char *path)
 //connect back
 void *cli_run(void *a)
 {
+    sleep(3);
     struct controller *cli=(struct controller *)a;
     printf("\n[!]Controller %s:%d connected\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port));
 
