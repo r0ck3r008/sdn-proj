@@ -2,7 +2,10 @@ ALL_OBJS= server.o broadcast.o snd_rcv.o link.o allocate.o
 LINKER_FLAGS= -shared -g -pthread -lsodium -o
 LIB_FLAGS= -fpic -c
 
-all: librelay.so clean_objs
+all: librelay.so main clean_objs
+
+main: main.py
+	chmod 755 main.py
 
 librelay.so: ${ALL_OBJS}
 	gcc -I${MAKE_PATH} ${ALL_OBJS} ${LINKER_FLAGS} librelay.so
@@ -27,3 +30,4 @@ clean_objs: ${ALL_OBJS}
 
 clean:
 	rm ./librelay.so
+	chmod 644 main.py
