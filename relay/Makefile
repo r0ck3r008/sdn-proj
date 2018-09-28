@@ -1,6 +1,6 @@
 ALL_OBJS= server.o broadcast.o snd_rcv.o link.o allocate.o
 LINKER_FLAGS= -shared -g -pthread -lsodium -o
-LIB_FLAGS= -Wall -Werror -fpic -c
+LIB_FLAGS= -fpic -c
 
 all: librelay.so clean_objs
 
