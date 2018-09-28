@@ -1,7 +1,7 @@
 export MAKE_PATH=${PWD}
 export COMPILER=gcc
 
-all: ryu_docker mininet_docker relay.bin
+all: ryu_docker mininet_docker librelay.so
 
 ryu_docker: ${MAKE_PATH}/controllers/ryu/Makefile
 	make -C ${MAKE_PATH}/controllers/ryu 
