@@ -28,14 +28,14 @@ int snd(struct controller *cli, char *cmds, char *reason, char *retval, int sock
     return 0;
 }
 
-char *rcv(struct controller *cli, char *reason, char *retval)
+char *rcv(struct controller *cli, int sock, char *reason, char *retval)
 {
     char *cmdr=(char *)allocate("char", 512);
 
-    if(recv(cli->sock, cmdr, sizeof(char)*512, 0)==-1)
+    if(recv(sock, cmdr, sizeof(char)*512, 0)==-1)
     {
         explicit_bzero(retval, sizeof(char)*256);
-        sprintf(retval, "\n[-]Error in receving from %s:%d for %s:%s\n", inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), reason, strerror(errno));
+        sprintf(retval, "\n[-]Error in receving from %s:%d for %s:%s\n", inet_ntoa(cli->addr.sin_addr), sock, reason, strerror(errno));
         return NULL;
     }
 
