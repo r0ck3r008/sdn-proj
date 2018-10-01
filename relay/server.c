@@ -51,15 +51,15 @@ int create_sock(char *argv1)
 
 int server_workings(char *argv2)
 {
-    int stat, a=1;
-    *done_bcast_nodes=0;
+    int stat, a=1, done_bcast_nodes_int=0;
+    done_bcast_nodes=&done_bcast_nodes_int;
     char *retval;
     pthread_t tid[10];
     cli=(struct controller *)allocate("struct controller", 10);
     socklen_t len=sizeof(struct controller);
     bcast_start=NULL;
 
-    for(cli_num=0; a; cli_num++)
+    for(cli_num=0; a; )
     {
         if(cli_num==0)
         {
@@ -86,6 +86,7 @@ int server_workings(char *argv2)
             fprintf(stderr, "\n[-]Error in creating thread for %s: %s\n", inet_ntoa(cli[cli_num].addr.sin_addr), strerror(stat));
             continue;
         }
+        cli_num++;
     }
 
     //publish
@@ -143,6 +144,7 @@ int publish(char *path)
             fprintf(f, "\n");
         }
     }
+    fclose(f);
 
     return 0;
 }
@@ -168,7 +170,7 @@ void *cli_run(void *a)
     {
         free(cmdr);
         //receive command
-        if((cmdr=rcv(cli, "receive command from client", retval))==NULL)
+        if((cmdr=rcv(cli, cli->sock, "receive command from client", retval))==NULL)
         {
             fprintf(stderr, retval);
             break;
@@ -206,10 +208,16 @@ int connect_back(struct controller *cli)
 {
     struct sockaddr_in addr;
     addr.sin_family=AF_INET;
-    addr.sin_port=htons(ntohs(12345));
+    addr.sin_port=htons(12346);
     addr.sin_addr.s_addr=inet_addr(inet_ntoa(cli->addr.sin_addr));
 
-    if(connect(cli->sock, (struct sockaddr *)&addr, sizeof(addr))!=-1)
+    if((cli->sock=socket(AF_INET, SOCK_STREAM, 0))==-1)
+    {
+        fprintf(stderr, "\n[-]Error in creating sock for cli->sock at %s: %s\n", inet_ntoa(cli->addr.sin_addr), strerror(errno));
+        return 1;
+    }
+
+    if(connect(cli->sock, (struct sockaddr *)&addr, sizeof(addr))==-1)
     {
         fprintf(stderr, "\n[-]Error in connecting back to %s:%d: %s\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), strerror(errno));
         return 1;
