@@ -9,7 +9,7 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 
 blacklist_path='blacklist'
-relaylib_path='/home/naman/git/sdn-proj/controller/ryu/apps/relay/librelay.so'
+relaylib_path='/ryu/apps/relay/librelay.so'
 relay_addr='192.168.1.61:12345'
 server_addr='127.0.0.1:12346'
 relay_lib=ct.CDLL(relaylib_path)
@@ -23,22 +23,22 @@ def read_blacklist_file():
 def init_all_functions():
     #sock_create
     relay_lib.sock_create.restype=ct.c_int
-    relay_lib.sock_create.argtypes=[c_char_p, c_int]
+    relay_lib.sock_create.argtypes=[ct.c_char_p, ct.c_int]
 
     #client_run
-    relay_lib.client_run.argtypes=[c_int]
+    relay_lib.client_run.argtypes=[ct.c_int]
 
 
 def sock_create():
     global bcast_sock, server_sock
 
     #bcast_sock
-    bcast_sock=int(relay_lib.sock_create(relay_addr.encode(), c_int(0)))
+    bcast_sock=int(relay_lib.sock_create(ct.c_char_p(relay_addr.encode()), ct.c_int(0)))
     if bcast_sock==-1:
         print('Error in connecting to the relay at {}'.format(relay_addr))
 
     #server_sock
-    server_sock=int(relay_lib.sock_create(server_addr.encode(), c_int(1)))
+    server_sock=int(relay_lib.sock_create(server_addr.encode(), ct.c_int(1)))
     if server_sock==-1:
         print('Error in creating and binding sock at {}'.format(server_addr))
 
@@ -56,7 +56,7 @@ class learn_sw(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(learn_sw, self).__init__(*args, **kwargs)
         self.mac_to_port={}
-        script_init()
+        init_script()
 
     def add_flow(self, datapath, port, dst, src, actions):
         #extrace openflow protocol
