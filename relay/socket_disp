@@ -1,0 +1,3 @@
+12345-> relay udp port listens
+12346-> relay tcp port listens
+6666-> controller tcp port listens
