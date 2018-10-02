@@ -1,4 +1,5 @@
 #define NEEDS_STRUCT
+#define NEEDS_NORMIE
 
 #include"global_defs.h"
 #include"allocate.h"
@@ -37,6 +38,11 @@ void *allocate(char *type, int size)
     {
         ret=malloc(sizeof(struct broadcast_struct)*size);
         explicit_bzero(ret, sizeof(struct broadcast_struct)*10);
+    }
+    else if(!strcmp(type, "struct normie_node"))
+    {
+        ret=malloc(sizeof(struct normie_node)*size);
+        explicit_bzero(ret, sizeof(struct normie_node)*size);
     }
 
     if(ret==NULL)
