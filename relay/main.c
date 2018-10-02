@@ -25,12 +25,7 @@ int main(int argc, char *argv[])
         _exit(-1);
     }
 
-    if(create_sock(argv[1]))
-    {
-        _exit(-1);
-    }
-
-    if(server_workings(argv[2])==-1)
+    if(server_workings(argv[1], argv[2])==-1)
     {
         _exit(-1);
     }
