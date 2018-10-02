@@ -1,7 +1,7 @@
 #ifndef GLOBAL_DEFS_H
 #define GLOBAL_DEFS_H
 
-int server_sock;
+int udp_sock, tcp_sock;
 int cli_num;
 int *done_bcast_nodes;
 
@@ -10,6 +10,14 @@ int *done_bcast_nodes;
         #define NEEDS_MUTEX
     #endif
 
+    #ifdef NEEDS_NORMIE
+        struct normie_node
+        {
+            char *msg;
+            struct normie_node *nxt;
+            struct normie_node *prev;
+        } *normie_start;
+    #endif
     #ifdef NEEDS_STRUCT
         #include<sys/socket.h>
         #include<netinet/in.h>
