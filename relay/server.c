@@ -27,11 +27,11 @@ int server_workings(char *argv1, char *argv2)
     pid_t child_pid;
 
     //create sockets
-    if((udp_sock=create_sock(argv1, 3))==-1)
+    if((udp_sock=sock_create(argv1, 3))==-1)
     {
         return 1;
     }
-    if((tcp_sock=create_sock(argv2, 1))==-1)
+    if((tcp_sock=sock_create(argv2, 1))==-1)
     {
         return 1;
     }
