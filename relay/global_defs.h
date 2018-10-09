@@ -24,22 +24,19 @@ int *done_bcast_nodes;
             int done;
             char *msg;
             struct controller *sender;
-            struct bcast_msg_node *prev;
-            struct bcast_msg_node *nxt;
-        } *bcast_start;
+        };
 
         struct normie_node
         {
             char *msg;
-            struct normie_node *nxt;
-            struct normie_node *prev;
-        } *normie_start;
+        };
 
         union list
         {
-            struct normie_node n, *nn, *pn;
-            struct bcast_msg_node bmn, *nbmn, *pbmn;
-        } *startnn, *startbmn;
+            struct normie_node nn;
+            struct bcast_msg_node bmn;
+            union list *nxt, *prev;
+        } *start_nn, *start_bmn;
 
     #endif
 
