@@ -1,11 +1,10 @@
-#define NEEDS_STRUCT
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>
 
 #include"global_defs.h"
 #include"server.h"
 
-#include<stdio.h>
-#include<string.h>
-#include<unistd.h>
 
 int init(int argc)
 {

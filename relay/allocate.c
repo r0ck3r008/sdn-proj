@@ -1,14 +1,17 @@
 #define NEEDS_STRUCT
-#define NEEDS_NORMIE
-
-#include"global_defs.h"
-#include"allocate.h"
-#include"broadcast.h"
 
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+
+#include"global_defs.h"
+#include"allocate.h"
+#include"broadcast.h"
+
 
 void *allocate(char *type, int size)
 {

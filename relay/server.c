@@ -1,15 +1,16 @@
-#include"global_defs.h"
-#include"udp_child.h"
-#include"tcp_child.h"
-#include"sock_create.h"
-#include"server.h"
-
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<signal.h>
 #include<pthread.h>
+
+#include"global_defs.h"
+#include"udp_child.h"
+#include"tcp_child.h"
+#include"sock_create.h"
+#include"server.h"
+
 
 struct alarm_st
 {
@@ -65,9 +66,14 @@ int server_workings(char *argv1, char *argv2)
         }
     }
 
-    if(tcp_child(argv2))
+    child_pid=0;
+
+    if((child_pid=fork())!=0)
     {
-        return 1;
+        if(tcp_child(argv2))
+        {
+            return 1;
+        }
     }
 }
 

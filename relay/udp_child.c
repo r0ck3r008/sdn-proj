@@ -1,14 +1,16 @@
 #define NEEDS_STRUCT
-#define NEEDS_NORMIE
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
 
 #include"global_defs.h"
 #include"udp_child.h"
 #include"snd_rcv.h"
 #include"link_normie.h"
 #include"allocate.h"
-
-#include<stdio.h>
-#include<stdlib.h>
 
 int udp_child()
 {

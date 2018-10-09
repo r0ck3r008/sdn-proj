@@ -1,13 +1,16 @@
 #define NEEDS_STRUCT
 
-#include"global_defs.h"
-#include"snd_rcv.h"
-#include"allocate.h"
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
 #include<errno.h>
+
+#include"global_defs.h"
+#include"snd_rcv.h"
+#include"allocate.h"
 
 int snd(struct controller *cli, char *cmds, char *reason, char *retval, int sock, int free_it)
 {

@@ -10,18 +10,8 @@ int *done_bcast_nodes;
         #define NEEDS_MUTEX
     #endif
 
-    #ifdef NEEDS_NORMIE
-        struct normie_node
-        {
-            char *msg;
-            struct normie_node *nxt;
-            struct normie_node *prev;
-        } *normie_start;
-    #endif
     #ifdef NEEDS_STRUCT
-        #include<sys/socket.h>
-        #include<netinet/in.h>
-        #include<arpa/inet.h>
+
         struct controller
         {
             int bcast_sock, sock;
@@ -38,11 +28,25 @@ int *done_bcast_nodes;
             struct bcast_msg_node *nxt;
         } *bcast_start;
 
+        struct normie_node
+        {
+            char *msg;
+            struct normie_node *nxt;
+            struct normie_node *prev;
+        } *normie_start;
+
+        union list
+        {
+            struct normie_node n, *nn, *pn;
+            struct bcast_msg_node bmn, *nbmn, *pbmn;
+        } *startnn, *startbmn;
+
     #endif
 
     #ifdef NEEDS_MUTEX
-        #include<pthread.h>
+
         pthread_mutex_t speaker=PTHREAD_MUTEX_INITIALIZER;
+
     #endif
 
 #endif

@@ -1,17 +1,22 @@
 #define NEEDS_ALL
 
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<pthread.h>
+#include<sodium.h>
+#include<errno.h>
+
 #include"global_defs.h"
 #include"broadcast.h"
 #include"allocate.h"
 #include"snd_rcv.h"
 #include"link.h"
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<unistd.h>
-#include<sodium.h>
-#include<errno.h>
 
 //writer
 int broadcast(struct controller *sender, char *cmds)
