@@ -37,15 +37,10 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(uint32_t)*size);
         explicit_bzero(ret, sizeof(uint32_t)*size);
     }
-    else if(!strcmp(type, "struct broadcast_struct"))
+    else if(!strcmp(type, "union list"))
     {
-        ret=malloc(sizeof(struct broadcast_struct)*size);
-        explicit_bzero(ret, sizeof(struct broadcast_struct)*10);
-    }
-    else if(!strcmp(type, "struct normie_node"))
-    {
-        ret=malloc(sizeof(struct normie_node)*size);
-        explicit_bzero(ret, sizeof(struct normie_node)*size);
+        ret=malloc(sizeof(union list)*size);
+        explicit_bzero(ret, sizeof(union list)*size);
     }
 
     if(ret==NULL)
