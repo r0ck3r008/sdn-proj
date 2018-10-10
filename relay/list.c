@@ -95,20 +95,10 @@ void equate(union list *a, union list *b, int fl)// 1 for start/node, 2 for norm
 
 int del_node(union list *start, char *msg, int id, int fl)
 {
-    union list *curr=start->nxt;
-
-    if(fl)
+    union list *curr;
+    if((curr=iterate(start, msg, id, fl))==NULL)
     {
-        for(curr; !strcmp(curr->nn.msg, msg) || curr!=NULL; curr=curr->nxt){}
-    }
-    else
-    {
-        for(curr; curr->bmn.id!=id || curr!=NULL; curr=curr->nxt){}
-    }
-    
-    if(curr==NULL)
-    {
-        return -2;//not found exception
+        return -1;
     }
 
     curr->prev->nxt=curr->nxt;
@@ -130,4 +120,20 @@ int del_node(union list *start, char *msg, int id, int fl)
     }
 
     return 1;
+}
+
+union list *iterate(union list *start, char *msg, int id, int fl)
+{
+     union list *curr=start->nxt;
+
+    if(fl)
+    {
+        for(curr; !strcmp(curr->nn.msg, msg) || curr!=NULL; curr=curr->nxt){}
+    }
+    else
+    {
+        for(curr; curr->bmn.id!=id || curr!=NULL; curr=curr->nxt){}
+    }
+
+    return curr;
 }
