@@ -137,3 +137,16 @@ union list *iterate(union list *start, char *msg, int id, int fl)
 
     return curr;
 }
+
+int list_len(union list *start)
+{
+    union list *curr=start->nxt;
+
+    int ret;
+    for(ret; curr!=NULL; curr=curr->nxt)
+    {
+        ret++;
+    }
+
+    return ret;
+}
