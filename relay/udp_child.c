@@ -6,6 +6,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<signal.h>
 
 #include"global_defs.h"
 #include"udp_child.h"
@@ -13,19 +14,28 @@
 #include"list.h"
 #include"allocate.h"
 
+union list *new;
+
 int udp_child()
 {
     start_nn=NULL;
-    union list *new=(union list *)allocate("union list", 1);
+    new=(union list *)allocate("union list", 1);
     new->nxt=NULL;
     new->prev=NULL;
     new->nn.msg=(char *)allocate("char", 50);
-    int ret=0, stat;
+    int ret=0, stat, num=1;
+    a=&num;
     char *cmdr=(char *)allocate("char", 512), *addr=(char *)allocate("char", 50);
     sprintf(cmdr, "genisis");
     sprintf(addr, "genisis");
+
+    //signal
+    struct sigaction action;
+    explicit_bzero(&action, sizeof(struct sigaction));
+    action.sa_handler=termination;
+    sigaction(SIGTERM, &action, NULL);
     
-    for(int i=0; ;)
+    for(int i=0; *a;)
     {
         free(cmdr);
         free(addr);
@@ -43,6 +53,12 @@ int udp_child()
         i++;
     }
 
-    free(new);
     return ret;
+}
+
+void termination(int sig)
+{
+    printf("\n[!]Caught SIGNAL: %d. Exiting...\n", sig);
+    *a=0;
+    free(new);
 }
