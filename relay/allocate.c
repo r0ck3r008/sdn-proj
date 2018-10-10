@@ -27,10 +27,10 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(struct controller)*size);
         explicit_bzero(ret, sizeof(struct controller)*size);
     }
-    else if(!strcmp(type, "struct bcast_msg_node"))
+    else if(!strcmp(type, "struct broadcast_struct"))
     {
-        ret=malloc(sizeof(struct bcast_msg_node)*size);
-        explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
+        ret=malloc(sizeof(struct broadcast_struct)*size);
+        explicit_bzero(ret, sizeof(struct broadcast_struct)*size);
     }
     else if(!strcmp(type, "uint32_t"))
     {
