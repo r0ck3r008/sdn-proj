@@ -15,13 +15,16 @@
 #include"broadcast.h"
 #include"allocate.h"
 #include"snd_rcv.h"
-#include"link.h"
+#include"list.h"
 
 
 //writer
 int broadcast(struct controller *sender, char *cmds)
 {
     //declarations
+    union list *new=(union list *)allocate("union list", 1);
+    new->bmn.msg=(char *)allocate("char", 512);
+    new->bmn.sender=(struct controller *)allocate("struct controller", 1);
     int stat;
     uint32_t *rand=(uint32_t *)allocate("uint32_t", 1), *max=(uint32_t *)allocate("uint32_t", 1);
     *max=1000000000;
@@ -65,8 +68,11 @@ int broadcast(struct controller *sender, char *cmds)
             }
         }
     }
-    add_node(sender, cmds, *rand);
-
+    new->bmn.id=*rand;
+    new->bmn.done=0;
+    sprintf(new->bmn.msg, "%d:%s", *rand, cmds);
+    memcpy(new->bmn.sender, sender, sizeof(struct controller));
+    add_node(new, start_bmn, 0);
 
     if((stat=pthread_mutex_unlock(&speaker))!=0)
     {
@@ -83,6 +89,9 @@ int broadcast(struct controller *sender, char *cmds)
 
     free(max);
     free(rand);
+    free(new->bmn.msg);
+    free(new->bmn.sender);
+    free(new);
     return 0;
 }
 
@@ -104,15 +113,15 @@ int send_pkt_back(struct controller *cli, int id, char *cmds)
         return 1;
     }
 
-    struct bcast_msg_node *curr=iterate(id);
+    union list *curr=iterate(start_bmn, NULL, id, 0);
 
-    if(snd(curr->sender, cmds, "send info back", NULL, curr->sender->sock, 0))
+    if(snd(curr->bmn.sender, cmds, "send info back", NULL, curr->bmn.sender->sock, 0))
     {
-        fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(curr->sender->addr.sin_addr));
+        fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(curr->bmn.sender->addr.sin_addr));
         return 1;
     }
 
-    curr->done=1;
+    curr->bmn.done=1;
     *done_bcast_nodes++;
 
     if((stat=pthread_mutex_unlock(&speaker))!=0)
@@ -127,7 +136,7 @@ int send_pkt_back(struct controller *cli, int id, char *cmds)
 void *cleanup_run(void *a)
 {
     int stat;
-    struct bcast_msg_node *curr=NULL;
+    union list *curr=start_bmn->nxt;
 
     for(;;)
     {
@@ -138,13 +147,12 @@ void *cleanup_run(void *a)
                 fprintf(stderr, "\n[-]Error in locking speaker for cleanup: %s\n", strerror(stat));
                 continue;
             }
-            curr=iterate(-1);
 
-            for(curr; curr->prev!=NULL; curr=curr->prev)
+            for(curr; curr!=NULL; curr=curr->nxt)
             {
-                if(curr->nxt->done && curr->nxt!=NULL)
+                if(curr->bmn.done)
                 {
-                    del_node(curr->nxt->id);
+                    del_node(start_bmn, NULL, curr->bmn.id, 0);
                 }
             }
             *done_bcast_nodes=0;
@@ -156,6 +164,4 @@ void *cleanup_run(void *a)
             }
         }
     }
-
-    pthread_exit(NULL);
 }
