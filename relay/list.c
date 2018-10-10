@@ -86,8 +86,48 @@ void equate(union list *a, union list *b, int fl)// 1 for start/node, 2 for norm
         a->bmn.done=b->bmn.done;
         sprintf(a->bmn.msg, "%s", b->bmn.msg);
         a->bmn.sender->sock=b->bmn.sender->sock;
+        a->bmn.sender->bcast_sock=b->bmn.sender->bcast_sock;
         a->bmn.sender->addr.sin_family=AF_INET;
         a->bmn.sender->addr.sin_port=b->bmn.sender->addr.sin_port;
         a->bmn.sender->addr.sin_addr.s_addr=inet_addr(inet_ntoa(b->bmn.sender->addr.sin_addr));
     }
+}
+
+int del_node(union list *start, char *msg, int id, int fl)
+{
+    union list *curr=start->nxt;
+
+    if(fl)
+    {
+        for(curr; !strcmp(curr->nn.msg, msg) || curr!=NULL; curr=curr->nxt){}
+    }
+    else
+    {
+        for(curr; curr->bmn.id!=id || curr!=NULL; curr=curr->nxt){}
+    }
+    
+    if(curr==NULL)
+    {
+        return -2;//not found exception
+    }
+
+    curr->prev->nxt=curr->nxt;
+    if(curr->nxt!=NULL)
+    {
+        curr->nxt->prev=curr->prev;
+    }
+
+    if(fl)
+    {
+        free(curr->nn.msg);
+        free(curr);
+    }
+    else
+    {
+        free(curr->bmn.msg);
+        free(curr->bmn.sender);
+        free(curr);
+    }
+
+    return 1;
 }
