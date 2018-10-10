@@ -60,17 +60,15 @@ int server_workings(char *argv1, char *argv2)
     else
     {
         //child-> udp_server
-        if(udp_child(argv1))
+        if(udp_child())
         {
             return 1;
         }
     }
-
-    child_pid=0;
-
-    if((child_pid=fork())!=0)
+    
+    if(fork()==0)
     {
-        if(tcp_child(argv2))
+        if(tcp_child())
         {
             return 1;
         }
