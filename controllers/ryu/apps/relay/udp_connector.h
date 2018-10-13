@@ -1,6 +1,6 @@
 #ifndef UDP_CONNECTOR
 #define UDP_CONNECTOR
 
-int udp_connector(int);
+int udp_connector(int, char *);
 
 #endif
