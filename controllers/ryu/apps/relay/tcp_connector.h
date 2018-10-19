@@ -1,6 +1,6 @@
 #ifndef TCP_CONNECTOR_H
 #define TCP_CONNECTOR_H
 
-int tcp_connector(int, int);
+int get_connection_back(int);
 
 #endif
