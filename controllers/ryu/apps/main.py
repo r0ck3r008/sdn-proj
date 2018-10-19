@@ -16,10 +16,17 @@ def init_all_functions():
     gt.relay_lib.sock_create.restype=ct.c_int
     gt.relay_lib.sock_create.argtypes=[ct.c_char_p, ct.c_int]
 
-    #client_run
+    #udp_connector
     gt.relay_lib.udp_connector.restype=ct.c_int
     gt.relay_lib.udp_connector.argtypes=[ct.c_int, ct.c_char_p]
 
+    #get_connection_back
+    gt.relay_lib.get_connection_back.restype=ct.c_int
+    gt.relay_lib.get_connection_back.argtypes=[ct.c_int]
+def connect_udp():
+    argv=gt.relay_addr+'12345'
+    if gt.relay_lib.udp_connector(ct.c_int(gt.udp_sock), ct.c_char_p(addr.encode()))==-1:
+        print('[-]Error in sending udp rsvp to {}'.format(addr))
 
 def sock_create():
 
@@ -27,26 +34,21 @@ def sock_create():
     gt.udp_sock=int(gt.relay_lib.sock_create(ct.c_char_p('UDP'.encode(), ct.c_int(0))))
     if gt.udp_sock==-1:
         print('Error in creating udp socket for sending msg to {}'.format(gt.relay_addr))
-
-    #bcast_sock
-    gt.bcast_sock=int(gt.relay_lib.sock_create(ct.c_char_p(gt.relay_addr.encode()), ct.c_int(0)))
-    if gt.bcast_sock==-1:
-        print('Error in connecting to the relay at {}'.format(gt.relay_addr))
+    connect_udp()
 
     #server_sock
     gt.server_sock=int(gt.relay_lib.sock_create(gt.server_addr.encode(), ct.c_int(1)))
     if gt.server_sock==-1:
         print('Error in creating and binding sock at {}'.format(gt.server_addr))
 
-def connect_udp():
-    argv=gt.relay_addr+'12345'
-    if gt.relay_lib.udp_connector(ct.c_int(gt.udp_sock), ct.c_char_p(addr.encode()))==-1:
-        print('[-]Error in sending udp rsvp to {}'.format(addr))
+    #bcast_sock
+    gt.bcast_sock=int(gt.relay_lib.sock_create(ct.c_char_p(gt.relay_addr.encode()), ct.c_int(0)))
+    if gt.bcast_sock==-1:
+        print('Error in connecting to the relay at {}'.format(gt.relay_addr))
 
 def init_script():
     bl.read_blacklist_file()
     init_all_functions()
     sock_create()
-    connect_udp()
-    tcp_c.connect_tcp(gt.bcast_sock, gt.server_sock)
+    tcp_c.tcp_handeller()
 
