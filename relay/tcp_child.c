@@ -76,6 +76,8 @@ void *cli_run(void *a)
     sprintf(cmdr, "genisis");
     sprintf(retval, "genisis");
 
+
+    sleep(1);
     if(connect_back(client))
     {
         sprintf(retval, "\n[-]Error in connecting back\n");
