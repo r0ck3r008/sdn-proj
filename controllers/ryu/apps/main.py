@@ -48,5 +48,5 @@ def init_script():
     init_all_functions()
     sock_create()
     connect_udp()
-    tcp_c.connect_tcp()
+    tcp_c.connect_tcp(gt.bcast_sock, gt.server_sock)
 
