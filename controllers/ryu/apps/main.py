@@ -23,6 +23,11 @@ def init_all_functions():
     #get_connection_back
     gt.relay_lib.get_connection_back.restype=ct.c_int
     gt.relay_lib.get_connection_back.argtypes=[ct.c_int]
+
+    #send_query
+    gt.relay_lib.send_query.restype=ct.c_int
+    gt.relay_lib.send_query.argtypes=[ct.c_int, ct.c_char_p]
+
 def connect_udp():
     argv=gt.relay_addr+'12345'
     if gt.relay_lib.udp_connector(ct.c_int(gt.udp_sock), ct.c_char_p(addr.encode()))==-1:
@@ -50,5 +55,5 @@ def init_script():
     bl.read_blacklist_file()
     init_all_functions()
     sock_create()
-    tcp_c.tcp_handeller()
+    tcp_c.get_connection_back()
 
