@@ -28,3 +28,43 @@ int get_connection_back(int sock)
 exit:
     return s;
 }
+
+int send_to_relay(int sock, int flag, char *addr)
+{
+    int ret=0;
+    char *cmds=(char *)allocate("char", 512), *retval=(char*)allocate("char", 128), *reason=(char *)allocate("char", 64);
+
+    if(flag)
+    {
+        sprintf(cmds, "BROADCAST:%s", addr);
+        sprintf(reason, "to broadcast for %s", addr);
+    }
+    else
+    {
+        sprintf(cmds, "%s", addr);
+        sprintf(reason, "to reply for %s", addr);
+    }
+
+    if(snd(sock, cmds, reason, retval))
+    {
+        fprintf(stderr, "[-]%s", retval);
+        ret=1;
+    }
+
+    free(reason);
+    free(retval);
+    return ret;
+}
+
+char *recv_bcast(int sock)
+{
+    char *cmdr, *retval=(char *)allocate("char", 128);
+
+    if((cmdr=rcv(sock, "receive broadcast if any", retval))==NULL)
+    {
+        fprintf(stderr, "\n[-]%s", retval);
+    }
+
+    free(retval);
+    return cmdr;
+}
