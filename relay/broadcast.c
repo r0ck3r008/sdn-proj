@@ -61,11 +61,6 @@ int broadcast(struct controller *sender, char *cmds)
                 continue;
             }
 
-            if((stat=pthread_join(tid[j], NULL))!=0)
-            {
-                fprintf(stderr, "\n[-]Error in joining broadcast thr back for %s: %s\n", inet_ntoa(cli[i].addr.sin_addr), strerror(stat));
-                continue;
-            }
         }
     }
     new->bmn.id=*rand;
