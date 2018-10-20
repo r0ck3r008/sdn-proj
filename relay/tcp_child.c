@@ -97,7 +97,7 @@ void *cli_run(void *a)
         if(strcasestr(strtok(cmdr, ":"), "broadcast")!=NULL)
         {
             //call broadcast
-            if(broadcast(client, cmdr))
+            if(broadcast(client, strtok(NULL, ":")))
             {
                 sprintf(retval, "\n[-]Error in broadcasting for %s:%d:%s\n", inet_ntoa(client->addr.sin_addr), ntohs(client->addr.sin_port), retval);
                 fprintf(stderr, "\n[-]%s\n", retval);
