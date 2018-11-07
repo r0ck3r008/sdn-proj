@@ -37,7 +37,7 @@ def connect_udp():
 def sock_create():
 
     #udp sock
-    gt.udp_sock=int(gt.relay_lib.sock_create(ct.c_char_p('UDP'.encode(), ct.c_int(0))))
+    gt.udp_sock=int(gt.relay_lib.sock_create(ct.c_char_p('UDP'.encode()), ct.c_int(0)))
     if gt.udp_sock==-1:
         print('Error in creating udp socket for sending msg to {}'.format(gt.relay_addr))
     connect_udp()
