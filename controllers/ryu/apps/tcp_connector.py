@@ -27,7 +27,6 @@ def server(conn):
             gt.p1.send('0:{}'.format(hosts[cmds]))
 
         gt.reader.aquire()
-        if
 
 def tcp_handeller():
     gt.p1, gt.c1=mt.Pipe()
@@ -40,7 +39,7 @@ def tcp_handeller():
     server_process.start()
 
 
-def tcp_connector():
+def get_connection_back():
     gt.sock=gt.relay_lib.get_connection_back(ct.c_int(gt.server_sock))
     if gt.sock==-1:
         print('Error in getting connection back from relay')
