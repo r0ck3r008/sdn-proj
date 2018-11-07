@@ -14,10 +14,20 @@ def bcast(conn):#send a query, or a reply from sock->sock
 def server(conn):
     while True:
         cmdr=gt.relay_lib.recv_bcast(ct.c_int(gt.bcast_sock))
-        #lock here
+        #this qualifies as reader
+        gt.reader.aquire()
+        if gt.readers==0:
+            gt.writer.aquire()
+        gt.reader_count+=1
+        gt.reaader.release()
+
         if cmds in hosts:
-            #do something with it, ie send reply
-            pass
+            #lock here
+            #send reply
+            gt.p1.send('0:{}'.format(hosts[cmds]))
+
+        gt.reader.aquire()
+        if
 
 def tcp_handeller():
     gt.p1, gt.c1=mt.Pipe()
