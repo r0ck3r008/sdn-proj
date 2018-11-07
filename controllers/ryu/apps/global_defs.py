@@ -12,3 +12,5 @@ p1=None
 p2=None
 c1=None
 c2=None
+reader=None
+writer=None
