@@ -2,6 +2,7 @@ import ctypes as ct
 import global_defs as gl
 import blacklist as bl
 import tcp_connector as tcp_c
+import threading as thr
 
 gt.relay_lib=ct.CDLL(gt.relay_lib_path)
 
@@ -56,4 +57,5 @@ def init_script():
     init_all_functions()
     sock_create()
     tcp_c.get_connection_back()
-
+    gt.reader=thr.BoundedSemaphore(value=1)
+    gt.writer=thr.BoundedSemaphore(value=1)
