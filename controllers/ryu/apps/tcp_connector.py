@@ -1,8 +1,11 @@
+import importlib as ilib
+
 import multiprocessing as mt
 import ctypes as ct
-import global_defs as gt
+gt=ilib.import_module('global_defs', '/ryu/apps')
 
 def bcast(conn):#send a query, or a reply from sock->sock
+    print('Calling bcast in tcp_connector')
     while True:
         cmd=str(conn.recv())
         flag, cmds=cmd.split(':')
@@ -12,6 +15,7 @@ def bcast(conn):#send a query, or a reply from sock->sock
             print('Error in broadcasting query for {}'.format(cmds))
 
 def server(conn):
+    print('Calling server in main')
     while True:
         cmdr=gt.relay_lib.recv_bcast(ct.c_int(gt.bcast_sock))
         #this qualifies as reader
@@ -29,6 +33,7 @@ def server(conn):
         gt.reader.aquire()
 
 def tcp_handeller():
+    print('Calling tcp_handeller in tcp_connector')
     gt.p1, gt.c1=mt.Pipe()
     gt.p2, gt.c2=mt.Pipe()
 
@@ -40,6 +45,7 @@ def tcp_handeller():
 
 
 def get_connection_back():
+    print('Calling get_connection_bak in tcp_connector')
     gt.sock=gt.relay_lib.get_connection_back(ct.c_int(gt.server_sock))
     if gt.sock==-1:
         print('Error in getting connection back from relay')
