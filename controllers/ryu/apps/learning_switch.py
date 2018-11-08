@@ -1,4 +1,5 @@
-import main
+import importlib as ilib
+import multiprocessing as mt
 from ryu.base import app_manager
 from ryu.ofproto import ofproto_v1_2
 from ryu.controller import ofp_event
@@ -8,18 +9,24 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 
+main=ilib.import_module('main', '/ryu/apps')
+gt=ilib.import_module('global_defs', '/ryu/apps')
+
 #every class needs to inherit app_manager RyuApp class
 class learn_sw(app_manager.RyuApp):
-    
+    i=0
     #define ofp version
     OFP_VERSIONS=[ofproto_v1_2.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(learn_sw, self).__init__(*args, **kwargs)
         self.mac_to_port={}
-        main.init_script()
+        init_process=mt.Process(target=main.init_script, args=[])
+        init_process.start()
+        print('Main init process started')
 
     def add_flow(self, datapath, port, dst, src, actions):
+        #print('Calling add_flow in learning_switch')
         #extrace openflow protocol
         ofproto=datapath.ofproto
 
@@ -30,7 +37,7 @@ class learn_sw(app_manager.RyuApp):
                 eth_src=src)
 
         #make the instruction list that must be followed if match takes place
-        if dst not in blacklist:
+        if dst not in gt.blacklist:
             inst=[datapath.ofproto_parser.OFPInstructionActions(
                 ofproto.OFPIT_APPLY_ACTIONS, actions)]
         else:
@@ -53,6 +60,7 @@ class learn_sw(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     #event as argument
     def pkt_fwd(self, ev):
+        #print('Calling pkt_fwd in learning_switch')
         #extract msg from the event
         msg=ev.msg
         #extract datapath, which entails basic info about the path of data flow
@@ -62,6 +70,8 @@ class learn_sw(app_manager.RyuApp):
         ofproto=datapath.ofproto
         #extract in port
         in_port=msg.match['in_port']
+        self.i=self.i+1
+        print('Number {}'.format(self.i))
 
         #msg.data has the raw data the packet has to offer
         #packet.Packet function extracts the data to pkt datatype
@@ -92,7 +102,7 @@ class learn_sw(app_manager.RyuApp):
         #cling to each forever, other wise flood every possible port
         if dst in self.mac_to_port[dpid]:
             out_port=self.mac_to_port[dpid][dst]
-        elif dst in blacklist:
+        elif dst in  gt.blacklist:
             out_port=self.OFPP_IN_PORT
         else:
             out_port=ofproto.OFPP_FLOOD
