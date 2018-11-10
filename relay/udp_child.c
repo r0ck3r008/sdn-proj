@@ -41,11 +41,13 @@ void udp_child()
         free(addr);
 
         char *addr=(char *)allocate("char", 50);
-        if((cmdr=rcv_frm(new->nn.msg))==NULL)
+        if((cmdr=rcv_frm(addr))==NULL)
         {
             fprintf(stderr, "\n[-]Error in receving: %d\n", i);
             break;
         }
+        sprintf(new->nn.msg, "%s", cmdr);
+        printf("\n[!]Received %s from %s\n", new->nn.msg, addr);
         add_node(new, start_nn, 2);
 
         explicit_bzero(new->nn.msg, sizeof(char)*50);
