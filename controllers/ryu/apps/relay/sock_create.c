@@ -44,7 +44,7 @@ int sock_create(char *argv, int fl)
         }
         else
         {
-            addr.sin_port=htons(12345);
+            addr.sin_port=htons(6666);
 
             if(bind(s, (struct sockaddr *)&addr, sizeof(addr))==-1)
             {
