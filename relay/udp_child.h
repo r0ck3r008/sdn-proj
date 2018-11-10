@@ -3,7 +3,7 @@
 
 int *a;
 
-int udp_child();
+void udp_child();
 void termination(int);
 
 #endif

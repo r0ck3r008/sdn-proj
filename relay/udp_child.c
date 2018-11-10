@@ -16,14 +16,14 @@
 
 union list *new;
 
-int udp_child()
+void udp_child()
 {
     start_nn=NULL;
     new=(union list *)allocate("union list", 1);
     new->nxt=NULL;
     new->prev=NULL;
     new->nn.msg=(char *)allocate("char", 50);
-    int ret=0, stat, num=1;
+    int stat, num=1;
     a=&num;
     char *cmdr=(char *)allocate("char", 512), *addr=(char *)allocate("char", 50);
     sprintf(cmdr, "genisis");
@@ -44,7 +44,6 @@ int udp_child()
         if((cmdr=rcv_frm(new->nn.msg))==NULL)
         {
             fprintf(stderr, "\n[-]Error in receving: %d\n", i);
-            ret=1;
             break;
         }
         add_node(new, start_nn, 2);
@@ -53,7 +52,6 @@ int udp_child()
         i++;
     }
 
-    return ret;
 }
 
 void termination(int sig)
