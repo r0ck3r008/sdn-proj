@@ -17,8 +17,6 @@ gt=ilib.import_module('global_defs', '/ryu/apps')
 
 #every class needs to inherit app_manager RyuApp class
 class learn_sw(app_manager.RyuApp):
-    i=0
-    lock=thr.BoundedSemaphore(value=1)
     #define ofp version
     OFP_VERSIONS=[ofproto_v1_2.OFP_VERSION]
 
