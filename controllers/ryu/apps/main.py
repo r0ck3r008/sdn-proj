@@ -1,6 +1,7 @@
 import ctypes as ct
 import importlib as ilib
 import threading as thr
+import time
 
 gt=ilib.import_module('global_defs', '/ryu/apps')
 tcp_c=ilib.import_module('tcp_connector', '/ryu/apps')
@@ -50,6 +51,7 @@ def sock_create():
     if gt.server_sock==-1:
         print('Error in creating and binding sock at {}'.format(gt.server_addr))
 
+    time.sleep(5)
     #bcast_sock
     gt.bcast_sock=int(gt.relay_lib.sock_create(ct.c_char_p(gt.relay_addr.encode()), ct.c_int(1)))
     if gt.bcast_sock==-1:
