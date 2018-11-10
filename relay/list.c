@@ -140,6 +140,11 @@ union list *iterate(union list *start, char *msg, int id, int fl)
 
 int list_len(union list *start)
 {
+    if(start==NULL)
+    {
+        fprintf(stderr, "\n[-]An empty list passed to list_len, exiting...\n");
+        _exit(-1);
+    }
     union list *curr=start->nxt;
 
     int ret;
