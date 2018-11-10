@@ -23,7 +23,7 @@ int server_workings(char *argv)
     pthread_t alarm_th;
     int stat, a=1;
     struct alarm_st a_s;
-    a_s.time=5;
+    a_s.time=10;
     a_s.a=&a;
     pid_t child_pid=fork();
 
@@ -31,7 +31,7 @@ int server_workings(char *argv)
     {
         //parent
         //handle udp sub-process
-        for(int i=0; a; i++)
+        for(int i=0; a;)
         {
             if(!i)
             {
@@ -39,7 +39,8 @@ int server_workings(char *argv)
                {
                    fprintf(stderr, "\n[-]Error in setting the alarm\n");
                    break;
-               } 
+               }
+               i++;
             }
         }
         if((stat=kill(child_pid, SIGTERM))!=0)
@@ -48,7 +49,7 @@ int server_workings(char *argv)
             _exit(-1);
         }
         close(udp_sock);
-
+            
         //handle tcp server now
         if((tcp_sock=sock_create(argv, 1))==-1)
         {
