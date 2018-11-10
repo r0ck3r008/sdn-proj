@@ -18,14 +18,7 @@ void add_node(union list *new, union list *start, int fl)//can be 0(for bcast) o
     static union list *curr_nn, *curr_bmn;
     union list *tmp;
 
-    if(fl)
-    {
-        equate(tmp, new, (0+fl));
-    }
-    else
-    {
-        equate(tmp, new, (0+fl));
-    }
+    equate(tmp, new, (0+fl));
 
     if(start==NULL)
     {
@@ -57,13 +50,14 @@ void equate(union list *a, union list *b, int fl)// 1 for start/node, 2 for norm
 
     if(fl==(1+2))//normie start
     {
-//        a=(union list *)allocate("union list", 1);
+        a=b;
         a->nn.msg=NULL;
         a->prev=NULL;
         a->nxt=b;
     }
     else if(fl==(1+0))//bcast start
     {
+        a=b;
         a->bmn.id=-1;
         a->bmn.done=-1;
         a->bmn.sender=NULL;
