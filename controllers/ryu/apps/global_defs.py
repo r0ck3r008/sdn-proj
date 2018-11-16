@@ -1,6 +1,6 @@
 #absolute path of some important files
 blacklist_path='/ryu/apps/blacklist'
-relay_lib_path='/ryu/apps/relay/librelay.so'
+relay_lib_path='/ryu/apps/librelay/librelay.so'
 
 #ip addresses of the realy and to be bound
 relay_addr='192.168.1.61'
