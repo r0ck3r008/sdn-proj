@@ -1,29 +1,29 @@
-#define NEEDS_STRUCT
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<unistd.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<fcntl.h>
 #include<signal.h>
+#include<errno.h>
 
 #include"global_defs.h"
 #include"udp_child.h"
 #include"snd_rcv.h"
-#include"list.h"
+#include"pipe_rcv.h"
 #include"allocate.h"
 
-union list *new;
-
+int pipefd;
 void udp_child()
 {
-    start_nn=NULL;
-    new=(union list *)allocate("union list", 1);
-    new->nxt=NULL;
-    new->prev=NULL;
-    new->nn.msg=(char *)allocate("char", 50);
-    int stat, num=1;
+    if((pipefd=open_pipe(O_RDWR))==-1)
+    {
+        sleep(5);
+    }
+
+    int  num=1;
     a=&num;
     char *cmdr=(char *)allocate("char", 512), *addr=(char *)allocate("char", 50);
     sprintf(cmdr, "genisis");
@@ -46,11 +46,13 @@ void udp_child()
             fprintf(stderr, "\n[-]Error in receving: %d\n", i);
             break;
         }
-        sprintf(new->nn.msg, "%s", cmdr);
-        printf("\n[!]Received %s from %s\n", new->nn.msg, addr);
-        add_node(new, start_nn, 2);
-
-        explicit_bzero(new->nn.msg, sizeof(char)*50);
+        sprintf(cmdr, "%s:%s", cmdr, addr);
+        
+        if(write(pipefd, cmdr, sizeof(char)*512)==-1)
+        {
+            fprintf(stderr, "\n[-]Error in writing %s to pipe: %s\n", cmdr, strerror(errno));
+            break;
+        }
         i++;
     }
 
@@ -59,6 +61,12 @@ void udp_child()
 void termination(int sig)
 {
     printf("\n[!]Caught SIGNAL: %d. Exiting...\n", sig);
+    char *end="END";
+    if(write(pipefd, end, strlen(end))==-1)
+    {
+        fprintf(stderr, "\n[-]Error in ending pipe relation: %s\n", strerror(errno));
+    }
+
     *a=0;
-    free(new);
+    close(pipefd);
 }
