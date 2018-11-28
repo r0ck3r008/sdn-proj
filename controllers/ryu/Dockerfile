@@ -1,5 +1,7 @@
 FROM ubuntu
 
+#nameserver
+RUN echo 'nameserver 1.1.1.1' > /etc/resolv.conf
 #update
 RUN apt-get update
 
