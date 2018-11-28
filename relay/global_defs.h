@@ -4,6 +4,7 @@
 int udp_sock, tcp_sock;
 int cli_num;
 int *done_bcast_nodes;
+char *pipe_name;
 
     #ifdef NEEDS_ALL
         #define NEEDS_STRUCT
