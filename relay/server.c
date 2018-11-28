@@ -7,19 +7,30 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<sys/types.h>
+#include<sys/stat.h>
 #include<signal.h>
 #include<pthread.h>
+#include<errno.h>
 
 #include"global_defs.h"
 #include"udp_child.h"
 #include"tcp_child.h"
 #include"alarm.h"
 #include"sock_create.h"
+#include"pipe_rcv.h"
 #include"server.h"
 
 
 int server_workings(char *argv)
 {
+    //make pipe
+    pipe_name="/tmp/.pipe";
+    if(mkfifo(pipe_name, 0644)==-1)
+    {
+        fprintf(stderr, "\n[-]Error in making pipe: %s\n", strerror(errno));
+        return 1;
+    }
+
     pthread_t alarm_th;
     int stat, a=1;
     struct alarm_st a_s;
@@ -30,7 +41,15 @@ int server_workings(char *argv)
     if(child_pid!=0)
     {
         //parent
-        //handle udp sub-process
+        pthread_t pipe_rcv_tid;
+        //start pipe_rcv process
+        if((stat=pthread_create(&pipe_rcv_tid, NULL, pipe_rcv, NULL))!=0)
+        {
+            fprintf(stderr, "\n[-]Error in creating the pipe_rcv thread: %s\n", strerror(stat));
+            sleep(5);
+            return 1;
+        }
+        //handle udp sub-process in saperate thread
         for(int i=0; a;)
         {
             if(!i)
