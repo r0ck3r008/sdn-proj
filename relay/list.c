@@ -24,15 +24,18 @@ void add_node(union list *new, union list *start, int fl)//can be 0(for bcast) o
     {
         equate(start, tmp, (1+fl));
         tmp->prev=start;
+        goto add_curr;
     }
     else
     {
+    add_curr:
         if(fl)
         {
             curr_nn->nxt=tmp;
             tmp->prev=curr_nn;
             tmp->nxt=NULL;
             curr_nn=tmp;
+            printf("\n[!]Node with msg %s for nn added\n", curr_nn->nn.msg);
         }
         else
         {
@@ -40,6 +43,7 @@ void add_node(union list *new, union list *start, int fl)//can be 0(for bcast) o
             tmp->prev=curr_bmn;
             tmp->nxt=NULL;
             curr_bmn=tmp;
+            printf("\n[!]Node with addr %sadded and id bmn\n", inet_ntoa(curr_bmn->bmn.sender->addr.sin_addr));
         }
     }
 }
