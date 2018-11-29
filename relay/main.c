@@ -8,9 +8,9 @@
 
 int init(int argc)
 {
-    if(argc!=2)
+    if(argc!=3)
     {
-        fprintf(stderr, "\n[!]Usage: ./relay [ip_for_udp]\n");
+        fprintf(stderr, "\n[!]Usage: ./relay [ip_for_udp] [pipe_path]\n");
         return 1;
     }
 
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         _exit(-1);
     }
 
-    if(server_workings(argv[1])==-1)
+    if(server_workings(argv[1], argv[2])==-1)
     {
         _exit(-1);
     }
