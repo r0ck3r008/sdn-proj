@@ -21,13 +21,11 @@
 #include"server.h"
 
 
-int server_workings(char *argv)
+int server_workings(char *argv1, char *argv2)
 {
     //make pipe
-    pipe_name="/tmp/.pipe";
-    if(mkfifo(pipe_name, 0644)==-1)
+    if(make_if_not_exists(argv2)==-1)
     {
-        fprintf(stderr, "\n[-]Error in making pipe: %s\n", strerror(errno));
         return 1;
     }
 
@@ -36,19 +34,21 @@ int server_workings(char *argv)
     struct alarm_st a_s;
     a_s.time=10;
     a_s.a=&a;
+
+    pthread_t pipe_rcv_tid;
+    //start pipe_rcv process
+    if((stat=pthread_create(&pipe_rcv_tid, NULL, pipe_rcv, argv2))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in creating the pipe_rcv thread: %s\n", strerror(stat));
+        sleep(5);
+        return 1;
+    }
+
     pid_t child_pid=fork();
 
     if(child_pid!=0)
     {
         //parent
-        pthread_t pipe_rcv_tid;
-        //start pipe_rcv process
-        if((stat=pthread_create(&pipe_rcv_tid, NULL, pipe_rcv, NULL))!=0)
-        {
-            fprintf(stderr, "\n[-]Error in creating the pipe_rcv thread: %s\n", strerror(stat));
-            sleep(5);
-            return 1;
-        }
         //handle udp sub-process in saperate thread
         for(int i=0; a;)
         {
@@ -70,7 +70,7 @@ int server_workings(char *argv)
         close(udp_sock);
             
         //handle tcp server now
-        if((tcp_sock=sock_create(argv, 1))==-1)
+        if((tcp_sock=sock_create(argv1, 1))==-1)
         {
             return 1;
         }
@@ -82,11 +82,36 @@ int server_workings(char *argv)
     else
     {
         //create socket
-        if((udp_sock=sock_create(argv, 3))==-1)
+        if((udp_sock=sock_create(argv1, 3))==-1)
         {
             return 1;
         }
         //child-> udp_server
-        udp_child();
+        udp_child(argv2);
     }
+}
+
+int make_if_not_exists(char *name)
+{
+    struct stat stat_st;
+    explicit_bzero(&stat_st, sizeof(struct stat));
+
+    if(stat(name, &stat_st)==0)
+    {
+        if(remove(name)==-1)
+        {
+            fprintf(stderr, "\n[-]%s exists but remove failed, exiting: %s\n", name, strerror(errno));
+            return 1;
+        }
+        printf("\n[!]Successfully removed pre-existing %s, now creating new.\n");
+    }
+
+    if(mkfifo(name, 0644)==-1)
+    {
+        fprintf(stderr, "\n[-]Error in making fifo %s: %s\n", name, strerror(errno));
+        return 1;
+    }
+
+    printf("\n[!]Successfully crated %s\n", name);
+    return 0;
 }
