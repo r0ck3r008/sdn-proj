@@ -1,4 +1,4 @@
 #!/bin/sh
 
-cd /pox
+cd /pox/ext
 tmux
