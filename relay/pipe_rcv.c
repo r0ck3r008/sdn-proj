@@ -23,6 +23,7 @@ union list *new;
 
 void *pipe_rcv(void *a)
 {
+    char *pipe_name=(char *)a;
     start_nn=NULL;
     new=(union list *)allocate("union list", 1);
     new->nxt=NULL;
@@ -31,7 +32,7 @@ void *pipe_rcv(void *a)
     char *cmdr=(char *)allocate("char", 512);
     sprintf(cmdr, "genisis");
 
-    if((pipefd=open_pipe(O_RDONLY))==-1)
+    if((pipefd=open_pipe(pipe_name, O_RDONLY))==-1)
     {
         fprintf(stderr, "\n[-]Error in opening pipefd: %s\n", strerror(errno));
         goto exit;
@@ -59,12 +60,12 @@ exit:
     pthread_exit(NULL);
 }
 
-int open_pipe(int flag)
+int open_pipe(char *name, int flag)
 {
     int pipe;
-    if((pipe=open(pipe_name, flag))==-1)
+    if((pipe=open(name, flag))==-1)
     {
-        fprintf(stderr, "\n[-]Error in opening %s with flag %d: %s\n", pipe_name, flag, strerror(errno));
+        fprintf(stderr, "\n[-]Error in opening %s with flag %d: %s\n", name, flag, strerror(errno));
     }
 
     return pipe;
