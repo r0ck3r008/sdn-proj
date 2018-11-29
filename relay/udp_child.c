@@ -18,9 +18,9 @@
 #include"allocate.h"
 
 int pipefd;
-void udp_child()
+void udp_child(char *argv)
 {
-    if((pipefd=open_pipe(O_RDWR))==-1)
+    if((pipefd=open_pipe(argv, O_RDWR))==-1)
     {
         sleep(5);
     }
