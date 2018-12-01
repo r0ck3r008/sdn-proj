@@ -1,7 +1,7 @@
 #ifndef GLOBAL_DEFS_H
 #define GLOBAL_DEFS_H
 
-int udp_sock, tcp_sock;
+int tcp_sock;
 int cli_num;
 int *done_bcast_nodes;
 
@@ -14,9 +14,10 @@ int *done_bcast_nodes;
 
         struct controller
         {
+            int id;
             int bcast_sock, sock;
             struct sockaddr_in addr;
-        } *cli;
+        };
         
         struct bcast_msg_node
         {
@@ -26,17 +27,14 @@ int *done_bcast_nodes;
             struct controller *sender;
         };
 
-        struct normie_node
+        union node
         {
-            char *msg;
-        };
-
-        union list
-        {
-            struct normie_node nn;
-            struct bcast_msg_node bmn;
-            union list *nxt, *prev;
-        } *start_nn, *start_bmn;
+            int tag;
+            struct controller *ctrlr;
+            struct bcast_msg_node *bmn;
+            union node *nxt;
+            union node *prev;
+        } *ctrlr_start, *bmn_start;
 
     #endif
 
