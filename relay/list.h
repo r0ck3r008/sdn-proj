@@ -1,10 +1,10 @@
-#ifndef LINKS_H
-#define LINKS_H
+#ifndef LIST_H
+#define LIST_H
 
-void add_node(union list *, union list *, int);
-void equate(union list *, union list *, int);
-int del_node(union list *, char *, int, int);
-union list *iterate(union list *, char *, int, int);
-int list_len(union list *);
+void add_node(union node *, union node *, int);
+void gen_equate(union node *, union node *, int);
+union node *find_node(union node *, int);
+int del_node(union node *, int);
+int list_len(union node *);
 
 #endif
