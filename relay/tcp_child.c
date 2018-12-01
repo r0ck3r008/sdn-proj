@@ -19,10 +19,10 @@
 #include"sock_create.h"
 #include"broadcast.h"
 
-int tcp_child()
+void tcp_child()
 {
-    int exp_cli=list_len(start_nn), stat, i;
-    cli=(struct controller *)allocate("struct controller", exp_cli);
+    int stat, i, exp_cli=10;
+    ctrlr_start==NULL;
     socklen_t len=sizeof(struct sockaddr_in);
     pthread_t tid[exp_cli];
     char *retval;
