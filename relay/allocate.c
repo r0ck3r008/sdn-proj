@@ -37,10 +37,10 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(uint32_t)*size);
         explicit_bzero(ret, sizeof(uint32_t)*size);
     }
-    else if(!strcmp(type, "union list"))
+    else if(!strcmp(type, "union node"))
     {
-        ret=malloc(sizeof(union list)*size);
-        explicit_bzero(ret, sizeof(union list)*size);
+        ret=malloc(sizeof(union node)*size);
+        explicit_bzero(ret, sizeof(union node)*size);
     }
 
     if(ret==NULL)
