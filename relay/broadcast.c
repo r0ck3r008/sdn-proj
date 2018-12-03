@@ -22,9 +22,9 @@
 int broadcast(struct controller *sender, char *cmds)
 {
     //declarations
-    union list *new=(union list *)allocate("union list", 1);
-    new->bmn.msg=(char *)allocate("char", 512);
-    new->bmn.sender=(struct controller *)allocate("struct controller", 1);
+    union node *new=(union node *)allocate("union node", 1);
+    new->bmn->msg=(char *)allocate("char", 512);
+    new->bmn->sender=(struct controller *)allocate("struct controller", 1);
     int stat;
     uint32_t *rand=(uint32_t *)allocate("uint32_t", 1), *max=(uint32_t *)allocate("uint32_t", 1);
     *max=1000000000;
