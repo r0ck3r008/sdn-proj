@@ -8,6 +8,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<sys/types.h>
 #include<pthread.h>
 #include<errno.h>
 
@@ -21,64 +22,67 @@
 
 void tcp_child()
 {
-    int stat, i, exp_cli=10;
+    int stat, i;
     ctrlr_start==NULL;
     socklen_t len=sizeof(struct sockaddr_in);
-    pthread_t tid[exp_cli];
     char *retval;
+    union node *new=(union node *)allocate("union node", 1);
+    new->ctrlr=(struct controller *)allocate("struct controller", 1);
+    pid_t parent_pid=getpid();
 
-    for(i=0; i<exp_cli; )
+    int i;
+    for(i=0;;)
     {
-        if((cli[i].bcast_sock=accept(tcp_sock, (struct sockaddr *)&cli[i].addr, &len))==-1)
+        if((new->ctrlr->bcast_sock=accept(tcp_sock, (struct sockaddr *)&new->ctrlr->addr, &len))==-1)
         {
-            fprintf(stderr, "\n[-]Error in accepting client %d:%s\n", i, strerror(errno));
+            fprintf(stderr, "\n[-]Error in accepting client num %d: %s\n", i, strerror(errno));
             continue;
         }
-
-        if((stat=pthread_create(&tid[i], NULL, cli_run, &cli[i]))!=0)
+        int tag=i;
+        new->tag=tag;
+        new->ctrlr->id=tag;
+        add_node(new, ctrlr_start, 0);
+        if(fork()==0)
         {
-            fprintf(stderr, "\n[-]Error in creating thread for %s:%d: %s\n", inet_ntoa(cli[i].addr.sin_addr), ntohs(cli[i].addr.sin_port), strerror(stat));
-            continue;
+            //child
+            union node *curr=find_node(ctrlr_start, tag);
+            cli_run(curr);
+            break;
         }
-
-        i++;
-        continue;
+        else
+        {
+            //parent
+            explicit_bzero(new->ctrlr, sizeof(struct controller));
+            explicit_bzero(new, sizeof(union node));
+            i++;
+        }
     }
 
-    //initiate cleanup thread
-    pthread_t cleanup_tid;
-    if((stat=pthread_create(&cleanup_tid, NULL, cleanup_run, NULL))!=0)
+    //initiate cleanup thread only in parent
+    if(getpid()==parent_pid)
     {
-        fprintf(stderr, "\n[-]Error in running cleanup thread: %s\n", strerror(stat));
-        //hard exit means critical element
-        _exit(-1);
-    }
-
-    cli_num=i;
-    for(i=0; i<cli_num; )
-    {
-        if((stat=pthread_join(tid[i], (void **)&retval))!=0)
+        cli_num=i;
+        pthread_t cleanup_tid;
+        if((stat=pthread_create(&cleanup_tid, NULL, cleanup_run, NULL))!=0)
         {
-            fprintf(stderr, "\n[-]Error in joining to client at %s:%d: %s\n", inet_ntoa(cli[i].addr.sin_addr), ntohs(cli[i].addr.sin_port), strerror(stat));
-            continue;
+            fprintf(stderr, "\n[-]Error in running cleanup thread: %s\n", strerror(stat));
+            //hard exit means critical element
+            _exit(-1);
         }
-        
-        printf("\n[!]Client %s:%d joined with exit msg: %s\n", inet_ntoa(cli[i].addr.sin_addr), ntohs(cli[i].addr.sin_port), (char *)retval);
-        free(retval);
-        i++;
+    
+        deallocate(new, "union node", 1);
     }
 }
 
-void *cli_run(void *a)
+void cli_run(union node *client)
 {
-    struct controller *client=(struct controller *)a;
     char *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 128);
     sprintf(cmdr, "genisis");
     sprintf(retval, "genisis");
 
 
     sleep(1);
-    if(connect_back(client))
+    if(connect_back(client->ctrlr))
     {
         sprintf(retval, "\n[-]Error in connecting back\n");
         goto exit;
@@ -88,7 +92,7 @@ void *cli_run(void *a)
     {
         free(cmdr);
         
-        if((cmdr=rcv(client, client->sock, "receive from client", retval))==NULL)
+        if((cmdr=rcv(client->ctrlr, client->cltrlr->sock, "receive from client", retval))==NULL)
         {
             fprintf(stderr, "%s", retval);
             continue;
@@ -97,34 +101,32 @@ void *cli_run(void *a)
         if(strcasestr(strtok(cmdr, ":"), "broadcast")!=NULL)
         {
             //call broadcast
-            if(broadcast(client, strtok(NULL, ":")))
+            if(broadcast(client->ctrlr, strtok(NULL, ":")))
             {
-                sprintf(retval, "\n[-]Error in broadcasting for %s:%d:%s\n", inet_ntoa(client->addr.sin_addr), ntohs(client->addr.sin_port), retval);
+                sprintf(retval, "\n[-]Error in broadcasting for %s:%d:%s\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port), retval);
                 fprintf(stderr, "\n[-]%s\n", retval);
                 continue;
             }
         }
         else if(!strcmp(cmdr, "END"))
         {
-            sprintf(retval, "\n[!]Exiting client %s:%d\n", inet_ntoa(client->addr.sin_addr), ntohs(client->addr.sin_port));
+            sprintf(retval, "\n[!]Exiting client %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
             break;
 
         }
         else
         {
             //call send reply
-            if(send_pkt_back(client, (int)strtol(strtok(cmdr, ":"), NULL, 10), strtok(NULL, ":")))
+            if(send_pkt_back(client->ctrlr, (int)strtol(strtok(cmdr, ":"), NULL, 10), strtok(NULL, ":")))
             {
-                sprintf(retval, "\n[-]Error in sending pkt back for %s:%d: %s\n", inet_ntoa(client->addr.sin_addr), ntohs(client->addr.sin_port), retval);
+                sprintf(retval, "\n[-]Error in sending pkt back for %s:%d: %s\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port), retval);
                 fprintf(stderr, "\n[-]%s\n", retval);
                 continue;
             }
         }
     }
 
-    exit:
-    pthread_exit(retval);
-
+exit:
 }
 
 int connect_back(struct controller *sender)
