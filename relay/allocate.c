@@ -51,3 +51,28 @@ void *allocate(char *type, int size)
 
     return ret;
 }
+
+void deallocate(void *a, char *type, int size)
+{
+    if(!strcmp(type, "char"))
+    {
+        explicit_bzero(a, sizeof(char)*size);
+    }
+    else if(!strcmp(type, "struct controller"))
+    {
+        explicit_bzero(a, sizeof(struct controller)*size);
+    }
+    else if(!strcmp(type, "struct broadcast_struct"))
+    {
+        explicit_bzero(a, sizeof(struct broadcast_struct)*size);
+    }
+    else if(!strcmp(type, "uint32_t"))
+    {
+        explicit_bzero(a, sizeof(uint32_t)*size);
+    }
+    else if(!strcmp(type, "union node"))
+    {
+        explicit_bzero(a, sizeof(union node)*size);
+    }
+    free(a);
+}
