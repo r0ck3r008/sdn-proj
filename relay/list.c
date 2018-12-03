@@ -8,45 +8,63 @@
 #include"list.h"
 #include"allocate.h"
 
-void add_node(union node *new, union node *start, int flag)//2 for ctrlr, 4 for bmn
+void add_node(union node *new, union node *start, int flag)//0 for ctrlr, 1 for bmn
 {
     union node *tmp;
-    static union node *curr_ctrlr, *curr_bmn;
+    static union node *curr[2];//0 for ctrlr, 1 for bmn
     
-    gen_equate(tmp, new, 1+flag);
+    general_equate(tmp, new, (4+flag));
+
+    if(start==NULL)
+    {
+        general_equate(start, tmp, 2);
+        start=tmp;
+        start->nxt=tmp;
+        tmp->prev=start;
+    }
+    else
+    {
+        curr[flag]->nxt=tmp;
+        tmp->prev=curr[flag];
+    }
+    tmp->nxt=NULL;
+    curr[flag]=tmp;
 }
 
-void gen_equate(union node *a, union node *b, int flag)//0 for start, 1 for tmp
+void general_equate(union node *a, union node *b, int flag)//0 for start, 1 for tmp
 {
     a=(union node *)allocate("union node", 1);
 
     switch(flag)
     {
- case 2://start of ctrlr
-    {
-        a->ctrlr->id=-1;
-        a->ctrlr->bcast_sock=-1;
-        a->ctrlr->sock=-1;
-//        a->ctrlr->addr
+     case 2:
+        a->prev=NULL;
+        a->nxt=NULL;
+        a->tag=-1;
+        a->ctrlr=NULL;
+        a->bmn=NULL;
+        break;
 
+     case (4+0)://tmp for ctrlr
+        a->tag=b->tag;
+        a->ctrlr=(struct controller *)allocate("struct controller", 1);
+        a->ctrlr->id=a->tag;
+        a->ctrlr->bcast_sock=b->ctrlr->bcast_sock;
+        a->ctrlr->sock=b->ctrlr->sock;
+        memcpy(a->ctrlr->addr, b->ctrlr->addr, sizeof(b->ctrlr->addr));
         break;
-    }
- case 3://tmp for ctrlr
-    {
+
+     case (4+1)://tmp for bmn
+        a->tag=b->tag;
+        a->bmn=(struct bcast_msg_node *)allocate("struct bcast_msg_node", 1);
+        a->bmn->id=a->tag;
+        a->bmn->done=0;
+        //msg
+        a->bmn->msg=(char *)allocate("char", 512);
+        sprintf(a->bmn->msg, "%s", b->bmn->msg);
+        //controller
+        a->bmn->sender=b->bmn->sender;
         break;
-    }
- case 4://start for bmn
-    {
-        break;
-    }
- case 5://tmp for bmn
-    {
-        break;
-    }
- default:
-    {
-        
-    }
     }
 }
 
@@ -61,7 +79,7 @@ union node *find_node(union node *start, int tag)
     return curr;
 }
 
-int del_node(union node *start, int tag)
+int del_node(union node *start, int flag, int tag)
 {
     union node *curr;
     if((curr=find_node(start, tag))!=NULL)
@@ -72,8 +90,17 @@ int del_node(union node *start, int tag)
             curr->nxt->prev=curr->prev;
         }
 
-        explicit_bzero(curr, sizeof(union node));
-        free(curr);
+        if(!flag)//ctrlr
+        {
+            deallocate(curr->ctrlr, "struct controller", 1);
+            deallocate(curr, "union node", 1);
+        }
+        else//bmn
+        {
+            deallocate(curr->bmn->msg, "char", 512);
+            deallocate(curr->bmn, "struct bcast_msg_node", 1);
+            deallocate(curr, "union node", 1);
+        }
     }
     else
     {
