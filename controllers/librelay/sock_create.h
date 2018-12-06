@@ -1,5 +1,5 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef SOCK_CREATE_H
+#define SOCK_CREATE_H
 
 int sock_create(char *, int);
 
