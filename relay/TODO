@@ -1,1 +1,1 @@
-1) make the client connections as a linked list rather than dynamic array
+in cl_run, make cmdr a receive queue rather than a single buffer to maximize the efficiency
