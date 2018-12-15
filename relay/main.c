@@ -10,7 +10,7 @@ int init(int argc)
 {
     if(argc!=2)
     {
-        fprintf(stderr, "\n[!]Usage: ./relay [ip_for_udp]\n");
+        fprintf(stderr, "\n[!]Usage: ./relay [ip_for_tcp]\n");
         return 1;
     }
 
