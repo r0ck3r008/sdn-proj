@@ -1,4 +1,4 @@
-#define NEEDS_STRUCT
+#define NEEDS_ALL
 #define _GNU_SOURCE
 
 #include<stdio.h>
@@ -22,15 +22,14 @@
 
 void tcp_child()
 {
-    int stat, i;
+    int stat, i, tag;
     ctrlr_start==NULL;
+    bmn_start=NULL;
     socklen_t len=sizeof(struct sockaddr_in);
-    char *retval;
     union node *new=(union node *)allocate("union node", 1);
     new->ctrlr=(struct controller *)allocate("struct controller", 1);
     pid_t parent_pid=getpid();
 
-    int i;
     for(i=0;;)
     {
         if((new->ctrlr->bcast_sock=accept(tcp_sock, (struct sockaddr *)&new->ctrlr->addr, &len))==-1)
@@ -38,7 +37,7 @@ void tcp_child()
             fprintf(stderr, "\n[-]Error in accepting client num %d: %s\n", i, strerror(errno));
             continue;
         }
-        int tag=i;
+        tag=i;
         new->tag=tag;
         new->ctrlr->id=tag;
         add_node(new, ctrlr_start, 0);
@@ -80,19 +79,19 @@ void cli_run(union node *client)
     sprintf(cmdr, "genisis");
     sprintf(retval, "genisis");
 
-
     sleep(1);
     if(connect_back(client->ctrlr))
     {
-        sprintf(retval, "\n[-]Error in connecting back\n");
+        fprintf(stderr, "\n[-]Error in connecting back\n");
         goto exit;
     }
 
     for(;;)
     {
-        free(cmdr);
+        explicit_bzero(retval, sizeof(char)*128);
+        deallocate(cmdr, "char", 512);
         
-        if((cmdr=rcv(client->ctrlr, client->cltrlr->sock, "receive from client", retval))==NULL)
+        if((cmdr=rcv(client->ctrlr, client->ctrlr->sock, "receive from client", retval))==NULL)
         {
             fprintf(stderr, "%s", retval);
             continue;
@@ -101,10 +100,9 @@ void cli_run(union node *client)
         if(strcasestr(strtok(cmdr, ":"), "broadcast")!=NULL)
         {
             //call broadcast
-            if(broadcast(client->ctrlr, strtok(NULL, ":")))
+            if(broadcast(client->ctrlr, cmdr))
             {
-                sprintf(retval, "\n[-]Error in broadcasting for %s:%d:%s\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port), retval);
-                fprintf(stderr, "\n[-]%s\n", retval);
+                fprintf(stderr, "\n[-]Error in broadcasting for %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
                 continue;
             }
         }
@@ -127,6 +125,8 @@ void cli_run(union node *client)
     }
 
 exit:
+    deallocate(retval, "char", 128);
+    deallocate(cmdr, "char", 512);
 }
 
 int connect_back(struct controller *sender)
