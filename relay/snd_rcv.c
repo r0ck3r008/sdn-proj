@@ -26,7 +26,7 @@ int snd(struct controller *cli, char *cmds, char *reason, char *retval, int sock
     
     if(free_it)
     {
-        free(cmds);
+        deallocate(cmds);
     }
     return 0;
 }
@@ -42,21 +42,5 @@ char *rcv(struct controller *cli, int sock, char *reason, char *retval)
         return NULL;
     }
 
-    return cmdr;
-}
-
-char *rcv_frm(char *addr)
-{
-    char *cmdr=(char *)allocate("char", 512);
-    struct sockaddr_in addr_in;
-    socklen_t len=sizeof(addr_in);
-
-    if(recvfrom(udp_sock, cmdr, sizeof(char)*512, 0, (struct sockaddr *)&addr_in, &len)==-1)
-    {
-        fprintf(stderr, "\n[-]Error in receving:%s\n", strerror(errno));
-        return NULL;
-    }
-
-    sprintf(addr, "%s:%d", inet_ntoa(addr_in.sin_addr), ntohs(addr_in.sin_port));
     return cmdr;
 }

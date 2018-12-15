@@ -3,6 +3,5 @@
 
 int snd(struct controller *, char *, char *, char *, int, int);
 char *rcv(struct controller *, int, char *, char *);
-char *rcv_frm(char *);
 
 #endif
