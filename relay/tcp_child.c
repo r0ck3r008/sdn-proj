@@ -1,4 +1,4 @@
-#define NEEDS_ALL
+#define NEEDS_STRUCT
 #define _GNU_SOURCE
 
 #include<stdio.h>
@@ -23,11 +23,6 @@
 void tcp_child()
 {
     int stat, i, tag;
-    ctrlr_start==NULL;
-    bmn_start=NULL;
-    socklen_t len=sizeof(struct sockaddr_in);
-    union node *new=(union node *)allocate("union node", 1);
-    new->ctrlr=(struct controller *)allocate("struct controller", 1);
     pid_t parent_pid=getpid();
 
     for(i=0;;)
@@ -45,7 +40,7 @@ void tcp_child()
         {
             //child
             union node *curr=find_node(ctrlr_start, tag);
-            cli_run(curr);
+            _cli_run(curr);
             break;
         }
         else
@@ -73,14 +68,14 @@ void tcp_child()
     }
 }
 
-void cli_run(union node *client)
+void _cli_run(union node *client)
 {
     char *cmdr=(char *)allocate("char", 512), *retval=(char *)allocate("char", 128);
     sprintf(cmdr, "genisis");
     sprintf(retval, "genisis");
 
     sleep(1);
-    if(connect_back(client->ctrlr))
+    if(_connect_back(client->ctrlr))
     {
         fprintf(stderr, "\n[-]Error in connecting back\n");
         goto exit;
@@ -112,7 +107,7 @@ void cli_run(union node *client)
             break;
 
         }
-        else
+        else if(!strcmp(cmdr, "FOUND"))
         {
             //call send reply
             if(send_pkt_back(client->ctrlr, (int)strtol(strtok(cmdr, ":"), NULL, 10), strtok(NULL, ":")))
@@ -129,7 +124,7 @@ exit:
     deallocate(cmdr, "char", 512);
 }
 
-int connect_back(struct controller *sender)
+int _connect_back(struct controller *sender)
 {
     if((sender->sock=sock_create(inet_ntoa(sender->addr.sin_addr), 0))==-1)
     {
