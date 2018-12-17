@@ -1,4 +1,4 @@
-#define NEEDS_ALL
+#define NEEDS_STRUCT
 
 #include<stdio.h>
 #include<stdlib.h>
