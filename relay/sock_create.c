@@ -4,6 +4,9 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<sys/un.h>
+#include<sys/types.h>
+#include<unistd.h>
 #include<errno.h>
 
 #include"sock_create.h"
@@ -49,4 +52,56 @@ int sock_create(char *addr, int flag)
 
 exit:
     return s;
+}
+
+int sock_create_local(char *addr, int flag)
+{
+    int sock;
+    if((sock=socket(AF_LOCAL, SOCK_STREAM, 0))==-1)
+    {
+        fprintf(stderr, "\n[-]Error in creating local socket for addr %s: %s\n", addr, strerror(errno));
+        goto exit;
+    }
+
+    unlink(addr);
+
+    struct sockaddr_un addr_st;
+    explicit_bzero(&addr, sizeof(struct sockaddr_un));
+    addr_st.sun_family=AF_LOCAL;
+    memcpy(addr_st.sun_path, addr, strlen(addr));
+
+    if(flag)//server
+    {
+        if(bind(sock, (struct sockaddr *)&addr_st, SUN_LEN(&addr_st))==-1)
+        {
+            fprintf(stderr, "\n[-]Error in binding to address %s, local socket: %s\n", addr, strerror(errno));
+            close(sock);
+            sock=-1;
+            goto exit;
+        }
+
+        if(listen(sock, 5)==-1)
+        {
+            fprintf(stderr, "\n[-]Error in listning to local socket: %s\n", strerror(errno));
+            close(sock);
+            sock=-1;
+            goto exit;
+        }
+
+        printf("\n[!]Local socket successfully bound and listning\n");
+    }
+    else//client
+    {
+        if(connect(sock, (struct sockaddr *)&addr_st, SUN_LEN(&addr_st))==-1)
+        {
+            fprintf(stderr, "\n[-]Error in connecting to local server at %s: %s\n", addr, strerror(errno));
+            close(sock);
+            sock=-1;
+            goto exit;
+        }
+        printf("\n[!]Connected to addr at %s\n", addr);
+    }
+
+    exit:
+    return sock;
 }
