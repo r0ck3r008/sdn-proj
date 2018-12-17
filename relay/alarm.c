@@ -5,7 +5,21 @@
 
 #include"alarm.h"
 
-void *alarm_run(void *alarm)
+int set_alarm(struct alarm_st *a_s)
+{
+    int stat, ret=0;
+    pthread_t alarm_tid;
+
+    if((stat=pthread_create(&alarm_tid, NULL, _alarm_run, a_s))!=0)
+    {
+        fprintf(stderr, "\n[-]Error in setting alarm for %s: %s\n", strerror(stat));
+        ret=1;
+    }
+
+    return ret;
+}
+
+void *_alarm_run(void *alarm)
 {
     struct alarm_st *a_s=(struct alarm_st *)alarm;
 
@@ -16,18 +30,3 @@ void *alarm_run(void *alarm)
 
     pthread_exit(NULL);
 }
-
-int set_alarm(struct alarm_st *a_s)
-{
-    int stat, ret=0;
-    pthread_t alarm_tid;
-
-    if((stat=pthread_create(&alarm_tid, NULL, alarm_run, a_s))!=0)
-    {
-        fprintf(stderr, "\n[-]Error in setting alarm for %s: %s\n", strerror(stat));
-        ret=1;
-    }
-
-    return ret;
-}
-

@@ -7,7 +7,7 @@ struct alarm_st
     int time;
     int *a;
 };
-void *alarm_run(void *);
 int set_alarm(struct alarm_st *);
+void *_alarm_run(void *);
 
 #endif
