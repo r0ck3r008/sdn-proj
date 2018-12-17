@@ -27,11 +27,6 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(struct controller)*size);
         explicit_bzero(ret, sizeof(struct controller)*size);
     }
-    else if(!strcmp(type, "struct broadcast_struct"))
-    {
-        ret=malloc(sizeof(struct broadcast_struct)*size);
-        explicit_bzero(ret, sizeof(struct broadcast_struct)*size);
-    }
     else if(!strcmp(type, "uint32_t"))
     {
         ret=malloc(sizeof(uint32_t)*size);
@@ -41,6 +36,11 @@ void *allocate(char *type, int size)
     {
         ret=malloc(sizeof(union node)*size);
         explicit_bzero(ret, sizeof(union node)*size);
+    }
+    else if(!strcmp(type, "struct local_struct"))
+    {
+        ret=malloc(sizeof(struct local_struct)*size);
+        explicit_bzero(ret, sizeof(struct local_struct)*size);
     }
 
     if(ret==NULL)
@@ -62,10 +62,6 @@ void deallocate(void *a, char *type, int size)
     {
         explicit_bzero(a, sizeof(struct controller)*size);
     }
-    else if(!strcmp(type, "struct broadcast_struct"))
-    {
-        explicit_bzero(a, sizeof(struct broadcast_struct)*size);
-    }
     else if(!strcmp(type, "uint32_t"))
     {
         explicit_bzero(a, sizeof(uint32_t)*size);
@@ -74,5 +70,10 @@ void deallocate(void *a, char *type, int size)
     {
         explicit_bzero(a, sizeof(union node)*size);
     }
+    else if(!strcmp(type, "struct local_struct"))
+    {
+        explicit_bzero(a, sizeof(struct local_struct)*size);
+    }
+
     free(a);
 }
