@@ -6,7 +6,7 @@
 #include"server.h"
 
 
-int init(int argc)
+int _init(int argc)
 {
     if(argc!=2)
     {
@@ -19,7 +19,7 @@ int init(int argc)
 
 int main(int argc, char *argv[])
 {
-    if(init(argc))
+    if(_init(argc))
     {
         _exit(-1);
     }
