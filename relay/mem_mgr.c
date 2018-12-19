@@ -11,6 +11,7 @@
 
 #include"global_defs.h"
 #include"mem_mgr.h"
+#include"snd_rcv.h"
 #include"sock_create.h"
 #include"list.h"
 #include"broadcast.h"
@@ -60,8 +61,38 @@ int mem_mgr()
 
 void *_local_cli_run(void *a)
 {
+    struct controller *b;
     int tag=*(int *)a;
     union node *client=find_node(local_start, tag);
+    char *cmdr=(char *)allocate("char", 512), *local_cmdr=(char *)allocate("char", 512);
+    sprintf(local_cmdr, "genesis");
 
+    for(local_cmdr; strcmp(local_cmdr, "END");)
+    {
+        deallocate(local_cmdr, "char", 512);
+        
+        if((local_cmdr=rcv(client->local->sock, "receive from UD client", 0))==NULL)
+        {
+            fprintf(stderr, "\n[-]Error in reading for client with tag %s\n", tag);
+            break;
+        }
+        
+        if(!strcmp(strtok(local_cmdr, ":"), "ADD"))
+        {
+            //add node call
+        }
+        else if(!strcmp(strtok(local_cmdr, ":"), "BROADCAST"))
+        {
+            //broadcast call
+        }
+        else if(!strcmp(strtok(local_cmdr, ":"), "FOUND"))
+        {
+            //snd_pkt_back call
+        }
+        
+    }
 
+    deallocate(local_cmdr, "char", 512);
+    close(client->local->sock);
+    pthread_exit(NULL);
 }
