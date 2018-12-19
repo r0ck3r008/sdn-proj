@@ -98,11 +98,18 @@ void _equate_local(union node *a, union node *b)
 union node *find_node(union node *start, int tag)
 {
     union node *curr;
+    if(start==NULL)
+    {
+        fprintf(stderr, "\n[-]Empty list passed to find_node\n");
+        curr=start;
+        goto exit;
+    }
     for(curr=start->nxt; curr->tag!=tag || curr->nxt!=NULL; curr=curr->nxt);
     if(curr==NULL)
     {
         fprintf(stderr, "\n[-]Item not found with tag %d\n", tag);
     }
+exit:
     return curr;
 }
 
