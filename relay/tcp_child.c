@@ -16,7 +16,6 @@
 #include"global_defs.h"
 #include"tcp_child.h"
 #include"snd_rcv.h"
-#include"list.h"
 #include"allocate.h"
 #include"sock_create.h"
 #include"broadcast.h"
@@ -58,7 +57,7 @@ int tcp_child()
         }
 
         tag=i;
-        sprintf(local_cmds, "add:%d:%s:%d:%d\n", tag, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), cli_sock);
+        sprintf(local_cmds, "ADD:%d:%s:%d:%d\n", tag, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), cli_sock);
         cli->bcast_sock=cli_sock;
         memcpy(&cli->addr, &addr, sizeof(struct sockaddr_in));
 
@@ -97,9 +96,9 @@ int tcp_child()
 void _cli_run(struct controller *cli, int tag)
 {
     int local_sock;
-    char *local_cmds=(char *)allocate("char", 512), *local_cmdr;
-    char *cmds=(char *)allocate("char", 512), *cmdr=(char *)allocate("char", 512);
-    sprintf(cmdr, "genosis");
+    char *local_cmds=(char *)allocate("char", 512);
+    char *cmdr=(char *)allocate("char", 512);
+    sprintf(cmdr, "genesis");
 
     //make UDS connecction
     if((local_sock=sock_create_local(".sock", 0))==-1)
@@ -116,6 +115,7 @@ void _cli_run(struct controller *cli, int tag)
     for(cmdr; strcmp(cmdr, "END");)
     {
         deallocate(cmdr, "char", 512);
+        local_cmds=(char *)allocate("char", 512);
 
         if((cmdr=rcv(cli->sock, "receive from client", 1))==NULL)
         {
@@ -123,18 +123,16 @@ void _cli_run(struct controller *cli, int tag)
             break;
         }
 
-        if(!strcmp(strtok(cmdr, ":"), "BROADCAST"))
+        sprintf(local_cmds, "%s", cmdr);
+        if(snd(local_sock, local_cmds, "send client command to UDS", 0))
         {
-            //broadcast
+            fprintf(stderr, "\n[-]Error in writing to local UDS\n");
+            break;
         }
-        else if(!strcmp(strtok(cmdr, ":"), "FOUND"))
-        {
-            //snd_pkt back
-        }
+
     }
 
 exit:
-    deallocate(local_cmdr, "char", 512);
     deallocate(cmdr, "char", 512);
     deallocate(cli, "struct controller", 1);
 }
