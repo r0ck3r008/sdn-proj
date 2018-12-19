@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<sys/types.h>
+#include<signal.h>
 #include<unistd.h>
 #include<errno.h>
 
@@ -14,9 +15,10 @@
 int server_workings(char *argv)
 {
 //TODO: add more parent server functionality like live monitoring or redundancy;
-    pid_t main_pid=getpid();
+    pid_t main_pid=getpid(), mem_mgr_pid;
     
-    if(fork()==0)
+    mem_mgr_pid=fork();
+    if(mem_mgr_pid==0)
     {
         //mem manager
         if(mem_mgr())
@@ -36,7 +38,11 @@ int server_workings(char *argv)
             }
 
             //child
-            tcp_child();
+            if(tcp_child())
+            {
+                kill(mem_mgr_pid, SIGTERM);
+                fprintf(stderr, "\n[-]Successfully killed mem manager after hard exit\n");
+            }
         }
     } 
 }
