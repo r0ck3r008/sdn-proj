@@ -101,8 +101,6 @@ union node *find_node(union node *start, int tag)
     if(start==NULL)
     {
         fprintf(stderr, "\n[-]Empty list passed to find_node\n");
-        curr=start;
-        goto exit;
     }
     for(curr=start->nxt; curr->tag!=tag || curr->nxt!=NULL; curr=curr->nxt);
     if(curr==NULL)
