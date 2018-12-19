@@ -1,45 +1,54 @@
-#define NEEDS_STRUCT
-
 #include<stdio.h>
-#include<stdlib.h>
 #include<string.h>
+#include<unistd.h>
 #include<sys/socket.h>
-#include<netinet/in.h>
-#include<arpa/inet.h>
 #include<errno.h>
 
-#include"global_defs.h"
 #include"snd_rcv.h"
 #include"allocate.h"
 
-int snd(struct controller *cli, char *cmds, char *reason, char *retval, int sock, int free_it)
+int snd(int fd, char *cmds, char *reason, int flag)
 {
-    if(send(sock, cmds, sizeof(char)*512, 0)==-1)
+    if(flag)
     {
-        if(retval!=NULL)
+        if(send(fd, cmds, sizeof(char)*512, 0)==-1)
         {
-            explicit_bzero(retval, sizeof(char)*256);
-            sprintf(retval, "\n[-]Error in sendig %s to %s:%d for %s: %s\n", cmds, inet_ntoa(cli->addr.sin_addr), ntohs(cli->addr.sin_port), reason, strerror(errno));
+            fprintf(stderr, "\n[-]Error in sendig %s for %s: %s\n", cmds, reason, strerror(errno));
+            return 1;
         }
-        return 1;
+    }
+    else
+    {
+        if(write(fd, cmds, sizeof(char)*512)==-1)
+        {
+            fprintf(stderr, "\n[-]Error in writing %s for %s: %s\n", cmds, reason, strerror(errno));
+            return 1;
+        }
     }
     
-    if(free_it)
-    {
-        deallocate(cmds);
-    }
+    deallocate(cmds, "char", 512);
     return 0;
 }
 
-char *rcv(struct controller *cli, int sock, char *reason, char *retval)
+char *rcv(int fd, char *reason, int flag)
 {
     char *cmdr=(char *)allocate("char", 512);
 
-    if(recv(sock, cmdr, sizeof(char)*512, 0)==-1)
+    if(flag)
     {
-        explicit_bzero(retval, sizeof(char)*256);
-        sprintf(retval, "\n[-]Error in receving from %s:%d for %s:%s\n", inet_ntoa(cli->addr.sin_addr), sock, reason, strerror(errno));
-        return NULL;
+        if(recv(fd, cmdr, sizeof(char)*512, 0)==-1)
+        {
+            fprintf(stderr, "\n[-]Error in receving from for %s:%s\n", reason, strerror(errno));
+            return NULL;
+        }
+    }
+    else
+    {
+        if(read(fd, cmdr, sizeof(char)*512)==-1)
+        {
+            fprintf(stderr, "\n[-]Error in reading for %s: %s\n", reason, strerror(errno));
+            return NULL;
+        }
     }
 
     return cmdr;
