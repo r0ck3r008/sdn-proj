@@ -21,9 +21,9 @@
 #include"sock_create.h"
 #include"broadcast.h"
 
-void tcp_child()
+int tcp_child()
 {
-    int hard_exit=0, local_sock;
+    int hard_exit=0, local_sock, ret=0;
     struct sockaddr_in addr;
     struct controller *cli=(struct controller *)allocate("struct controller", 1);
     socklen_t len=sizeof(struct sockaddr_in);
@@ -87,8 +87,10 @@ void tcp_child()
         if(hard_exit)
         {
             kill(child_pid, SIGTERM);
+            ret=1;
         }
         deallocate(cli, "struct controller", 1);
+        return ret;
     }
 }
 
