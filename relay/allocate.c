@@ -11,6 +11,7 @@
 #include"global_defs.h"
 #include"allocate.h"
 #include"broadcast.h"
+#include"mem_mgr.h"
 
 
 void *allocate(char *type, int size)
@@ -27,10 +28,15 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(struct controller)*size);
         explicit_bzero(ret, sizeof(struct controller)*size);
     }
-    else if(!strcmp(type, "uint32_t"))
+    else if(!strcmp(type, "struct bcast_msg_node"))
+    {
+        ret=malloc(sizeof(struct bcast_msg_node)*size);
+        explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
+    }
+    else if(!strcmp(type, "struct func_call"))
     {
         ret=malloc(sizeof(uint32_t)*size);
-        explicit_bzero(ret, sizeof(uint32_t)*size);
+        explicit_bzero(ret, sizeof(struct func_call)*size);
     }
     else if(!strcmp(type, "union node"))
     {
@@ -62,9 +68,13 @@ void deallocate(void *a, char *type, int size)
     {
         explicit_bzero(a, sizeof(struct controller)*size);
     }
-    else if(!strcmp(type, "uint32_t"))
+    else if(!strcmp(type, "struct bcast_msg_node"))
     {
-        explicit_bzero(a, sizeof(uint32_t)*size);
+        explicit_bzero(a, sizeof(struct bcast_msg_node)*size);
+    }
+    else if(!strcmp(type, "struct func_call"))
+    {
+        explicit_bzero(a, sizeof(struct func_call)*size);
     }
     else if(!strcmp(type, "union node"))
     {
