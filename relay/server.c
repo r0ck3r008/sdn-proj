@@ -1,48 +1,48 @@
 #include<stdio.h>
-#include<stdlib.h>
 #include<string.h>
+#include<sys/wait.h>
 #include<sys/types.h>
-#include<signal.h>
 #include<unistd.h>
 #include<errno.h>
 
 #include"global_defs.h"
 #include"server.h"
-#include"sock_create.h"
 #include"tcp_child.h"
-#include"mem_mgr.h"
+#include"sock_create.h"
 
-int server_workings(char *argv)
+int server_workings(char *addr)
 {
-//TODO: add more parent server functionality like live monitoring or redundancy;
-    pid_t main_pid=getpid(), mem_mgr_pid;
-    
-    mem_mgr_pid=fork();
-    if(mem_mgr_pid==0)
+    pid_t tcp_pid=fork();
+
+    switch(tcp_pid)
     {
-        //mem manager
-        if(mem_mgr())
-        {
-            _exit(-1);
-        }
-        
+     case 0:
+         //child
+         tcp_sock=0;
+         if((tcp_sock=sock_create(addr, 1))==-1)
+         {
+             fprintf(stderr, "\n[-]Exiting tcp_server...\n");
+             _exit(-1);
+         }
+         if(tcp_child())
+         {
+             fprintf(stderr, "\n[-]Exiting the tcp_server...\n");
+             _exit(-1);
+         }
+         break;
+
+     case -1:
+         fprintf(stderr, "\n[-]Error in forking off the tcp_child: %s\n", strerror(errno));
+         _exit(-1);
+
+     default:
+         while(1)
+         {
+             if(wait(NULL)==tcp_pid)
+             {
+                 printf("\n[!]Closing all\n");
+                 break;
+             }
+         }
     }
-
-    if(getpid()==main_pid)
-    {
-        if(fork()==0)
-        {
-            if((tcp_sock=sock_create(argv, 1))==-1)
-            {
-                return 1;
-            }
-
-            //child
-            if(tcp_child())
-            {
-                kill(mem_mgr_pid, SIGTERM);
-                fprintf(stderr, "\n[-]Successfully killed mem manager after hard exit\n");
-            }
-        }
-    } 
 }
