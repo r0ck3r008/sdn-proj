@@ -15,7 +15,7 @@
 void add_node(union node *new, union node *start, int flag)//0 for ctrlr, 1 for bmn
 {
     union node *tmp;
-    static union node *curr[3];//0 for ctrlr, 1 for bmn
+    static union node *curr[2];//0 for ctrlr, 1 for bmn
     
     _general_equate(tmp, new, (4+flag));
 
@@ -50,10 +50,6 @@ void _general_equate(union node *a, union node *b, int flag)//0 for start, 1 for
 
      case (4+1)://tmp for bmn
         _equate_bmn(a, b);
-        break;
-
-     case (4+2)://tmp for local struct
-        _equate_local(a, b);
     }
 }
 
@@ -86,13 +82,6 @@ void _equate_bmn(union node *a, union node *b)
     sprintf(a->bmn->msg, "%s", b->bmn->msg);
     //controller
     a->bmn->sender=b->bmn->sender;
-}
-
-void _equate_local(union node *a, union node *b)
-{
-    a->tag=b->tag;
-    a->local->sock=b->local->sock;
-    memcpy(&a->local->addr, &b->local->addr, sizeof(struct sockaddr_un));
 }
 
 union node *find_node(union node *start, int tag)
