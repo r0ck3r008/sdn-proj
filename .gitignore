@@ -3,3 +3,4 @@ controllers/ryu/apps/*.pyc
 controllers/librelay/librelay.so
 pox/*
 controllers/pox/ext/*.pyc
+papers/*
