@@ -19,21 +19,14 @@ int *done_bcast_nodes;
             struct controller *sender;
         };
 
-        struct local_struct
-        {
-            int sock;
-            struct sockaddr_un addr;
-        }
-
         union node
         {
             int tag;
             struct controller *ctrlr;
             struct bcast_msg_node *bmn;
-            struct local_struct *local;
             union node *nxt;
             union node *prev;
-        } *ctrlr_start, *bmn_start, *local_start;
+        } *ctrlr_start, *bmn_start;
 
     #endif
 #endif
