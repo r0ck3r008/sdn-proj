@@ -11,7 +11,7 @@
 #include"global_defs.h"
 #include"allocate.h"
 #include"broadcast.h"
-#include"mem_mgr.h"
+#include"lock_and_exec.h"
 
 
 void *allocate(char *type, int size)
@@ -33,20 +33,15 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(struct bcast_msg_node)*size);
         explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
     }
-    else if(!strcmp(type, "struct func_call"))
-    {
-        ret=malloc(sizeof(uint32_t)*size);
-        explicit_bzero(ret, sizeof(struct func_call)*size);
-    }
     else if(!strcmp(type, "union node"))
     {
         ret=malloc(sizeof(union node)*size);
         explicit_bzero(ret, sizeof(union node)*size);
     }
-    else if(!strcmp(type, "struct local_struct"))
+    else if(!strcmp(type, "struct func_call"))
     {
-        ret=malloc(sizeof(struct local_struct)*size);
-        explicit_bzero(ret, sizeof(struct local_struct)*size);
+        ret=malloc(sizeof(struct func_call)*size);
+        explicit_bzero(ret, sizeof(struct func_call)*size);
     }
 
     if(ret==NULL)
@@ -72,17 +67,13 @@ void deallocate(void *a, char *type, int size)
     {
         explicit_bzero(a, sizeof(struct bcast_msg_node)*size);
     }
-    else if(!strcmp(type, "struct func_call"))
-    {
-        explicit_bzero(a, sizeof(struct func_call)*size);
-    }
     else if(!strcmp(type, "union node"))
     {
         explicit_bzero(a, sizeof(union node)*size);
     }
-    else if(!strcmp(type, "struct local_struct"))
+    else if(!strcmp(type, "struct func_call"))
     {
-        explicit_bzero(a, sizeof(struct local_struct)*size);
+        explicit_bzero(a, sizeof(struct func_call)*size);
     }
 
     free(a);
