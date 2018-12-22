@@ -1,5 +1,5 @@
-#define NEEDS_STRUCT
 #define _GNU_SOURCE
+#define NEEDS_STRUCT
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -8,141 +8,191 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
-#include<sys/types.h>
-#include<signal.h>
 #include<pthread.h>
 #include<errno.h>
 
 #include"global_defs.h"
 #include"tcp_child.h"
-#include"snd_rcv.h"
-#include"allocate.h"
-#include"sock_create.h"
 #include"broadcast.h"
+#include"allocate.h"
+#include"lock_and_exec.h"
+#include"snd_rcv.h"
+#include"sock_create.h"
+
+pthread_mutex_t ctrlr_mtx=PTHREAD_MUTEX_INITIALIZER;
 
 int tcp_child()
 {
-    int hard_exit=0, local_sock, ret=0;
-    struct sockaddr_in addr;
-    struct controller *cli=(struct controller *)allocate("struct controller", 1);
+    int stat, hard_exit=0, ret=0;
+    pthread_t tid[10];
     socklen_t len=sizeof(struct sockaddr_in);
-    pid_t parent_pid=getpid(), child_pid;
-    char *local_cmds;
+    union node *new;
+    struct func_call *fcall=alloc_fcall(0);
 
-    if((local_sock=sock_create_local(".sock", 0))==-1)
+    //main loop
+    for(int i=0;;)
     {
-        _exit(-1);        
-    }
-
-    for(int i=0, tag, cli_sock, stat;;)
-    {
-        local_cmds=(char *)allocate("char", 512);
+        new=_allocate_new(1);
 
         if(i==1)
         {
-            pthread_t cleanup_tid;
-            if((stat=pthread_create(&cleanup_tid, NULL, cleanup_run, NULL))!=0)
+            pthread_t cleanup_id;
+            if((stat=pthread_create(&cleanup_id, NULL, cleanup_run, NULL))!=0)
             {
-                fprintf(stderr, "\n[-]Error in running cleanup thread: %s\n", strerror(stat));
-                //hard exit as this is a critical element
-                hard_exit=1;
+                fprintf(stderr, "\n[-]Error in starting cleanup thread: %s\n", strerror(errno));
+                hard_exit=i;
                 break;
             }
         }
 
-        if((cli_sock=accept(tcp_sock, (struct sockaddr *)&addr, &len))==-1)
+        if((new->ctrlr->bcast_sock=accept(tcp_sock, (struct sockaddr *)&new->ctrlr->addr, &len))==-1)
         {
-            fprintf(stderr, "\n[-]Error in accepting client num %d: %s\n", i, strerror(errno));
+            fprintf(stderr, "\n[-]Error in accepting client %d: %s\n", i, strerror(errno));
             continue;
         }
 
-        tag=i;
-        sprintf(local_cmds, "ADD:%d:%s:%d:%d\n", tag, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), cli_sock);
-        cli->bcast_sock=cli_sock;
-        memcpy(&cli->addr, &addr, sizeof(struct sockaddr_in));
-
-        child_pid=fork();
-        if(child_pid==0)
+        //block and do
+        new->tag=i;
+        if(lock_and_exec(&ctrlr_mtx, fcall, 3, new, ctrlr_start, 0))
         {
-            //child
-            _cli_run(cli, tag);
+            fprintf(stderr, "\n[-]Error in adding node for %s:%d\n", inet_ntoa(new->ctrlr->addr.sin_addr), ntohs(new->ctrlr->addr.sin_port));
+            hard_exit=i;
             break;
         }
-        else
+
+        if((stat=pthread_create(&tid[i], NULL, _cli_run, &i))!=0)
         {
-            //parent
-            if(snd(cli_sock, local_cmds, "send to UDS the client info", 0))
-            {
-                fprintf(stderr, "\n[-]Error in writing for client %s:%s\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-                kill(child_pid, SIGTERM);
-            }
-            explicit_bzero(cli, sizeof(struct controller));
-            i++;
+            fprintf(stderr, "\n[-]Error in starting thread for %s:%d: %s\n", inet_ntoa(new->ctrlr->addr.sin_addr), ntohs(new->ctrlr->addr.sin_port), strerror(stat));
+            continue;
         }
+
+        deallocate(new->ctrlr, "struct controller", 1);
+        deallocate(new, "union node", 1);
+        i++;
     }
 
-    if(getpid()==parent_pid)
+    if(hard_exit)
     {
-        if(hard_exit)
+        for(int i=0; i<hard_exit; i++)
         {
-            kill(child_pid, SIGTERM);
-            ret=1;
+            pthread_cancel(tid[i]);
         }
-        deallocate(cli, "struct controller", 1);
-        return ret;
+        ret=1;
     }
+    deallocate(fcall, "struct func_call", 1);
+    return ret;
 }
 
-void _cli_run(struct controller *cli, int tag)
+void *_cli_run(void *a)
 {
-    int local_sock;
-    char *local_cmds=(char *)allocate("char", 512);
+    int tag=*(int *)a;
     char *cmdr=(char *)allocate("char", 512);
     sprintf(cmdr, "genesis");
+    struct func_call *fcall;
+    union node *client;
+    if((client=_client_helper(tag))==NULL)
+    {
+        goto exit;
+    }
 
-    //make UDS connecction
-    if((local_sock=sock_create_local(".sock", 0))==-1)
-    {
-        goto exit;
-    }
-    
-    //connect back
-    if(_connect_back(cli))
-    {
-        goto exit;
-    }
-    
-    for(cmdr; strcmp(cmdr, "END");)
+    for(cmdr; strcasestr(cmdr, "END")==NULL;)
     {
         deallocate(cmdr, "char", 512);
-        local_cmds=(char *)allocate("char", 512);
 
-        if((cmdr=rcv(cli->sock, "receive from client", 1))==NULL)
+        if((cmdr=rcv(client->ctrlr->sock, "receive from client"))==NULL)
         {
-            fprintf(stderr, "\n[-]Error in receiving for client %s\n", inet_ntoa(cli->addr.sin_addr));
+            fprintf(stderr, "\n[-]Error in receving from %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
             break;
         }
-
-        sprintf(local_cmds, "%s", cmdr);
-        if(snd(local_sock, local_cmds, "send client command to UDS", 0))
+        if(strcasestr(cmdr, "broadcast")!=NULL)
         {
-            fprintf(stderr, "\n[-]Error in writing to local UDS\n");
-            break;
+            //broadcast
+            fcall=alloc_fcall(3);
+
+
+        }
+        else if(strcasestr(cmdr, "found")!=NULL)
+        {
+            //snd_pkt back
+            fcall=alloc_fcall(4);
         }
 
+        deallocate(fcall, "struct func_call", 1);
+    }
+    
+exit:
+
+    printf("\n[!]Closing connection to %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
+    //close sockets
+    close(client->ctrlr->bcast_sock);
+    close(client->ctrlr->sock);
+    //deallocate buffer and structures
+    fcall=alloc_fcall(2);
+    if(lock_and_exec(&ctrlr_mtx, fcall, 3, client, 0, tag))
+    {
+        fprintf(stderr, "\n[-]Error in deleting node %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
+    }
+    deallocate(fcall, "struct func_call", 1);
+    deallocate(cmdr, "char", 512);
+    //exit
+    pthread_exit(NULL);
+}
+
+union node *_client_helper(int tag)
+{
+    //block and find
+    int hard_exit=0;
+    union node *client;
+    struct func_call *fcall=alloc_fcall(1);
+
+    if(lock_and_exec(&ctrlr_mtx, fcall, 3, client, ctrlr_start, tag))
+    {
+        fprintf(stderr, "\n[-]Error in finding client node for tag %d\n", tag);
+        goto exit;
+    }
+
+    //connect back
+    if(_connect_back(client->ctrlr))
+    {
+        goto exit;
     }
 
 exit:
-    deallocate(cmdr, "char", 512);
-    deallocate(cli, "struct controller", 1);
+    deallocate(fcall, "struct func_call", 1);
+    if(hard_exit)
+    {
+        return NULL;
+    }
+    return client;
 }
 
-int _connect_back(struct controller *sender)
+int _connect_back(struct controller *client)
 {
-    if((sender->sock=sock_create(inet_ntoa(sender->addr.sin_addr), 0))==-1)
+    int ret=0;
+    if((client->sock=sock_create(inet_ntoa(client->addr.sin_addr), 0))==-1)
     {
-        fprintf(stderr, "\n[-]Error in connecting back\n");
-        return -1;
+        fprintf(stderr, "\n[-]Error in connecting back to client for %s:%d\n", inet_ntoa(client->addr.sin_addr), ntohs(client->addr.sin_port));
+        ret=client->sock;
     }
-    return 0;
+    return ret;
+}
+
+union node *_allocate_new(int flag)
+{
+    union node *new=(union node *)allocate("union node", 1);
+    new->nxt=NULL;
+    new->prev=NULL;
+
+    if(flag)
+    {
+        new->ctrlr=(struct controller *)allocate("struct controller", 1);
+        new->bmn=NULL;
+    }
+    else
+    {
+        new->bmn=(struct bcast_msg_node *)allocate("struct bcast_msg_node", 1);
+        new->ctrlr=NULL;
+    }
+
+    return new;
 }
