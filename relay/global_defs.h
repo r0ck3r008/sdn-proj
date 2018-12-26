@@ -3,6 +3,7 @@
 
 int tcp_sock;
 int *done_bcast_nodes;
+int ctrlr_rc;
 
     #ifdef NEEDS_STRUCT
 
