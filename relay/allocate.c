@@ -43,6 +43,11 @@ void *allocate(char *type, int size)
         ret=malloc(sizeof(struct func_call)*size);
         explicit_bzero(ret, sizeof(struct func_call)*size);
     }
+    else if(!strcmp(type, "struct mutex_call"))
+    {
+        ret=malloc(sizeof(struct mutex_call)*size);
+        explicit_bzero(ret, sizeof(struct mutex_call)*size);
+    }
 
     if(ret==NULL)
     {
@@ -74,6 +79,10 @@ void deallocate(void *a, char *type, int size)
     else if(!strcmp(type, "struct func_call"))
     {
         explicit_bzero(a, sizeof(struct func_call)*size);
+    }
+    else if(!strcmp(type, "struct mutex_call"))
+    {
+        explicit_bzero(a, sizeof(struct mutex_call)*size);
     }
 
     free(a);
