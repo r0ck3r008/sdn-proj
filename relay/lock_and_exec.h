@@ -6,6 +6,7 @@ struct func_call
     void (*add)(union node *, union node *, int);
     union node *(*find)(union node *, int);
     int (*del)(union node *, int, int);
+    int (*len)(union node *);
 };
 
 struct mutex_call

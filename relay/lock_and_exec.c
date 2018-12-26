@@ -39,6 +39,17 @@ int lock_and_exec(struct mutex_call *mcall, struct func_call *fcall, int num, ..
         int tag=va_arg(lst, int);
         ret=fcall->find(start, tag);
     }
+    else if(fcall->len!=NULL)
+    {
+        union node *start=va_arg(lst, union node *);
+        int *len=va_arg(lst, int *);
+
+        if((*len=list_len(start))==-1)
+        {
+            ret=1;
+        }
+
+    }
 
     if(_unlock(mcall))
     {
@@ -173,6 +184,7 @@ struct func_call *alloc_fcall(int flag)
     fcall->add=NULL;
     fcall->find=NULL;
     fcall->del=NULL;
+    fcall->len=NULL;
 
     switch(flag)
     {
@@ -184,6 +196,9 @@ struct func_call *alloc_fcall(int flag)
          break;
      case 2:
          fcall->del=del_node;
+         break;
+     case 3:
+         fcall->len=list_len;
     }
 }
 
@@ -206,6 +221,11 @@ struct mutex_call *alloc_mcall(int flag, int num, ...)
          mcall->ctrlr=va_arg(lst, pthread_mutex_t *);
          break;
      case 2: //write access to bmn
+         mcall->bmn=va_arg(lst, pthread_mutex_t *);
+         break;
+     case 3:
+         mcall->ctrlr_ro=va_arg(lst, pthread_mutex_t *);
+         mcall->ctrlr=va_arg(lst, pthread_mutex_t *);
          mcall->bmn=va_arg(lst, pthread_mutex_t *);
     }
 
