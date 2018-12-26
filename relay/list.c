@@ -60,7 +60,7 @@ void _general_equate_start(union node *a, union node *b)
     a->tag=-1;
     a->ctrlr=NULL;
     a->bmn=NULL;
-    a=b;
+//    a=b;
 }
 
 void _equate_ctrlr(union node *a, union node *b)
