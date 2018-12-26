@@ -13,9 +13,9 @@
 
 #include"global_defs.h"
 #include"tcp_child.h"
+#include"lock_and_exec.h"
 #include"broadcast.h"
 #include"allocate.h"
-#include"lock_and_exec.h"
 #include"snd_rcv.h"
 #include"sock_create.h"
 
@@ -108,10 +108,12 @@ void *_cli_run(void *a)
             fprintf(stderr, "\n[-]Error in receving from %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
             break;
         }
+
+        struct mutex_call *mcall=alloc_mcall(3, 3, &ctrlr_ro_mtx, &ctrlr_mtx, &bmn_mtx);
         if(strcasestr(cmdr, "broadcast")!=NULL)
         {
             //broadcast
-            if(broadcast(client->ctrlr, cmdr, &bmn_mtx))
+            if(broadcast(client->ctrlr, cmdr, mcall))
             {
                 fprintf(stderr, "\n[-]Error in broadcasting for %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
                 break;
@@ -120,13 +122,14 @@ void *_cli_run(void *a)
         else if(strcasestr(cmdr, "found")!=NULL)
         {
             //snd_pkt back
-            if(send_pkt_back(client->ctrlr, cmdr, &bmn_mtx))
+            if(send_pkt_back(client->ctrlr, cmdr, mcall))
             {
                 fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
                 break;
             }
         }
 
+        deallocate(mcall, "struct mutex_call", 1);
     }
     
 exit:
