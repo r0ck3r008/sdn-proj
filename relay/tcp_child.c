@@ -23,6 +23,7 @@ pthread_mutex_t ctrlr_mtx=PTHREAD_MUTEX_INITIALIZER;
 
 int tcp_child()
 {
+    ctrlr_rc=0;
     int stat, hard_exit=0, ret=0;
     pthread_t tid[10];
     socklen_t len=sizeof(struct sockaddr_in);
@@ -107,17 +108,22 @@ void *_cli_run(void *a)
         if(strcasestr(cmdr, "broadcast")!=NULL)
         {
             //broadcast
-            fcall=alloc_fcall(3);
-
-
+            if(broadcast(client->ctrlr, cmdr))
+            {
+                fprintf(stderr, "\n[-]Error in broadcasting for %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
+                break;
+            }
         }
         else if(strcasestr(cmdr, "found")!=NULL)
         {
             //snd_pkt back
-            fcall=alloc_fcall(4);
+            if(send_pkt_back(client->ctrlr, cmdr))
+            {
+                fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
+                break;
+            }
         }
 
-        deallocate(fcall, "struct func_call", 1);
     }
     
 exit:
