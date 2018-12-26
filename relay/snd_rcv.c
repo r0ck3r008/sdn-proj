@@ -7,7 +7,7 @@
 #include"snd_rcv.h"
 #include"allocate.h"
 
-int snd(int fd, char *cmds, char *reason)
+int snd(int fd, char *cmds, char *reason, int free_it)
 {
     if(send(fd, cmds, sizeof(char)*512, 0)==-1)
     {
@@ -15,7 +15,10 @@ int snd(int fd, char *cmds, char *reason)
         return 1;
     }
     
-    deallocate(cmds, "char", 512);
+    if(free_it)
+    {
+        deallocate(cmds, "char", 512);
+    }
     return 0;
 }
 
