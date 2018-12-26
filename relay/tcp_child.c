@@ -20,6 +20,8 @@
 #include"sock_create.h"
 
 pthread_mutex_t ctrlr_mtx=PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ctrlr_ro_mtx=PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t bmn_mtx=PTHREAD_MUTEX_INITIALIZER;
 
 int tcp_child()
 {
@@ -29,6 +31,7 @@ int tcp_child()
     socklen_t len=sizeof(struct sockaddr_in);
     union node *new;
     struct func_call *fcall=alloc_fcall(0);
+    struct mutex_call *mcall=alloc_mcall(1, 1, &ctrlr_mtx);
 
     //main loop
     for(int i=0;;)
@@ -54,7 +57,7 @@ int tcp_child()
 
         //block and do
         new->tag=i;
-        if(lock_and_exec(&ctrlr_mtx, fcall, 3, new, ctrlr_start, 0))
+        if(lock_and_exec(mcall, fcall, 3, new, ctrlr_start, 0))
         {
             fprintf(stderr, "\n[-]Error in adding node for %s:%d\n", inet_ntoa(new->ctrlr->addr.sin_addr), ntohs(new->ctrlr->addr.sin_port));
             hard_exit=i;
@@ -81,6 +84,7 @@ int tcp_child()
         ret=1;
     }
     deallocate(fcall, "struct func_call", 1);
+    deallocate(mcall, "struct mutex_call", 1);
     return ret;
 }
 
@@ -89,7 +93,6 @@ void *_cli_run(void *a)
     int tag=*(int *)a;
     char *cmdr=(char *)allocate("char", 512);
     sprintf(cmdr, "genesis");
-    struct func_call *fcall;
     union node *client;
     if((client=_client_helper(tag))==NULL)
     {
@@ -108,7 +111,7 @@ void *_cli_run(void *a)
         if(strcasestr(cmdr, "broadcast")!=NULL)
         {
             //broadcast
-            if(broadcast(client->ctrlr, cmdr))
+            if(broadcast(client->ctrlr, cmdr, &bmn_mtx))
             {
                 fprintf(stderr, "\n[-]Error in broadcasting for %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
                 break;
@@ -117,7 +120,7 @@ void *_cli_run(void *a)
         else if(strcasestr(cmdr, "found")!=NULL)
         {
             //snd_pkt back
-            if(send_pkt_back(client->ctrlr, cmdr))
+            if(send_pkt_back(client->ctrlr, cmdr, &bmn_mtx))
             {
                 fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
                 break;
@@ -133,13 +136,16 @@ exit:
     close(client->ctrlr->bcast_sock);
     close(client->ctrlr->sock);
     //deallocate buffer and structures
-    fcall=alloc_fcall(2);
-    if(lock_and_exec(&ctrlr_mtx, fcall, 3, client, 0, tag))
+    struct func_call *fcall=alloc_fcall(2);
+    struct mutex_call*mcall=alloc_mcall(1, 1, &ctrlr_mtx);
+
+    if(lock_and_exec(mcall, fcall, 3, client, 0, tag))
     {
         fprintf(stderr, "\n[-]Error in deleting node %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
     }
-    deallocate(fcall, "struct func_call", 1);
     deallocate(cmdr, "char", 512);
+    deallocate(fcall, "struct func_call", 1);
+    deallocate(mcall, "struct mutex_call", 1);
     //exit
     pthread_exit(NULL);
 }
@@ -150,8 +156,9 @@ union node *_client_helper(int tag)
     int hard_exit=0;
     union node *client;
     struct func_call *fcall=alloc_fcall(1);
+    struct mutex_call *mcall=alloc_mcall(0, 2, &ctrlr_ro_mtx, &ctrlr_mtx);
 
-    if(lock_and_exec(&ctrlr_mtx, fcall, 3, client, ctrlr_start, tag))
+    if(lock_and_exec(mcall, fcall, 3, client, ctrlr_start, tag))
     {
         fprintf(stderr, "\n[-]Error in finding client node for tag %d\n", tag);
         goto exit;
@@ -165,6 +172,7 @@ union node *_client_helper(int tag)
 
 exit:
     deallocate(fcall, "struct func_call", 1);
+    deallocate(mcall, "struct mutex_call", 1);
     if(hard_exit)
     {
         return NULL;
