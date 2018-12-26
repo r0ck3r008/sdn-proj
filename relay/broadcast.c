@@ -17,7 +17,7 @@
 #include"allocate.h"
 #include"snd_rcv.h"
 
-int broadcast(struct controller *sender, char *cmds)
+int broadcast(struct controller *sender, char *cmds, pthread_mutex_t *bmn_mtx)
 {
     pid_t main_pid=getpid();
     int num_ctrlr=list_len(ctrlr_start);
