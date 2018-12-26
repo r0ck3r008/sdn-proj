@@ -202,7 +202,7 @@ struct mutex_call *alloc_mcall(int flag, int num, ...)
      case 0: //read access to ctrlr
          mcall->ctrlr_ro=va_arg(lst, pthread_mutex_t *);
 
-     case 1: //read access to ctrlr
+     case 1: //write access to ctrlr
          mcall->ctrlr=va_arg(lst, pthread_mutex_t *);
          break;
      case 2: //write access to bmn
