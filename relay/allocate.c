@@ -4,15 +4,15 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
+#include<stdint.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
 
 #include"global_defs.h"
 #include"allocate.h"
-#include"broadcast.h"
 #include"lock_and_exec.h"
-
+#include"broadcast.h"
 
 void *allocate(char *type, int size)
 {
@@ -22,6 +22,11 @@ void *allocate(char *type, int size)
     {
         ret=malloc(sizeof(char)*size);
         explicit_bzero(ret, sizeof(char)*size);
+    }
+    if(!strcmp(type, "uint32_t"))
+    {
+        ret=malloc(sizeof(uint32_t)*size);
+        explicit_bzero(ret, sizeof(uint32_t)*size);
     }
     else if(!strcmp(type, "struct controller"))
     {
@@ -63,6 +68,10 @@ void deallocate(void *a, char *type, int size)
     if(!strcmp(type, "char"))
     {
         explicit_bzero(a, sizeof(char)*size);
+    }
+    if(!strcmp(type, "uint32_t"))
+    {
+        explicit_bzero(a, sizeof(uint32_t)*size);
     }
     else if(!strcmp(type, "struct controller"))
     {
