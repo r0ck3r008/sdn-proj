@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<stdint.h>
 #include<unistd.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
@@ -19,13 +20,14 @@
 #include"allocate.h"
 #include"snd_rcv.h"
 
-int broadcast(struct controller *sender, char *cmds, struct mutex_call *mcall)
+int broadcast(struct controller *sender, char *cmds, struct mutex_call *mcall, uint32_t *tag)
 {
     int list_len=0, ret=0;
     pid_t main_pid=getpid();
     struct mutex_call *mcall2=alloc_mcall(0, 2, mcall->ctrlr_ro, mcall->ctrlr);
+    sprintf(cmds, "%s:%d", cmds, *tag);
 
-    if(_broadcast_helper(mcall, sender, cmds, &list_len))
+    if(_broadcast_helper(mcall, sender, cmds, &list_len, tag))
     {
         fprintf(stderr, "\n[-]Error in _broadcast helper of %s\n", inet_ntoa(sender->addr.sin_addr));
         ret=1;
@@ -67,11 +69,12 @@ exit:
     if(getpid()==main_pid)
     {
         deallocate(mcall2, "struct mutex_call", 1);
+        deallocate(tag, "uint32_t", 1);
         return ret;
     }
 }
 
-int _broadcast_helper(struct mutex_call *mcall, struct controller *sender, char *cmds, int *len)
+int _broadcast_helper(struct mutex_call *mcall, struct controller *sender, char *cmds, int *len, uint32_t *tag)
 {
     int ret=0;
     struct mutex_call *mcall2=alloc_mcall(0, 2, mcall->ctrlr_ro, mcall->ctrlr);
@@ -80,6 +83,7 @@ int _broadcast_helper(struct mutex_call *mcall, struct controller *sender, char 
     new->bmn->sender=sender;
     new->bmn->msg=cmds;
     new->bmn->done=0;
+    new->tag=*tag;
 
     if(lock_and_exec(mcall2, fcall, 2, ctrlr_start, len))
     {
@@ -116,7 +120,52 @@ void _broadcast_run(struct controller *recepient, char *cmds)
     }
 }
 
-int send_pkt_back(struct controller *recepient, char *cmds, struct mutex_call *mcall)
+int send_pkt_back(struct controller *sender, char *cmds, struct mutex_call *mcall)
 {
+    int ret=0;
+    uint32_t tag=(uint32_t)strtol(strtok(cmds, ":"), NULL, 10);
+    struct func_call *fcall=alloc_fcall(1);
 
+    union node *recepient;
+    if(lock_and_exec(mcall, fcall, 3, recepient, bmn_start, tag))
+    {
+        fprintf(stderr, "\n[-]Error in finding node for tag %d returned by %s\n", tag, sender->addr.sin_addr);
+        ret=1;
+        goto exit;
+    }
+
+    if(snd(recepient->bmn->sender->sock, cmds, "send back to query maker", 0))
+    {
+        fprintf(stderr, "\n[-]Error in sending back to %s\n", inet_ntoa(recepient->bmn->sender->addr.sin_addr));
+        ret=1;
+        goto exit;
+    }
+
+    //delete bmn
+    if(_del_bmn(mcall, &tag))
+    {
+        fprintf(stderr, "\n[-]Error in deallocating bmn for %s\n", inet_ntoa(recepient->bmn->sender->addr.sin_addr));
+        ret=1;
+    }
+
+exit:
+    deallocate(fcall, "struct func_call", 1);
+    return ret;
+}
+
+int _del_bmn(struct mutex_call *mcall, uint32_t *tag)
+{
+    int ret=0;
+    struct func_call *fcall=alloc_fcall(2);
+
+    if(lock_and_exec(mcall, fcall, 3, bmn_start, 1, *tag))
+    {
+        fprintf(stderr, "\n[-]Error in deleting bmn node with tag %d\n", *tag);
+        ret=1;
+        goto exit;
+    }
+
+exit:
+    deallocate(fcall, "struct func_call", 1);
+    return ret;
 }
