@@ -25,6 +25,13 @@ int broadcast(struct controller *sender, char *cmds, struct mutex_call *mcall)
     pid_t main_pid=getpid();
     struct mutex_call *mcall2=alloc_mcall(0, 2, mcall->ctrlr_ro, mcall->ctrlr);
 
+    if(_broadcast_helper(mcall, sender, cmds, &list_len))
+    {
+        fprintf(stderr, "\n[-]Error in _broadcast helper of %s\n", inet_ntoa(sender->addr.sin_addr));
+        ret=1;
+        goto exit;
+    }
+
     if(_lock(mcall2))
     {
         fprintf(stderr, "\n[-]Lock failed for %s", inet_ntoa(sender->addr.sin_addr));
@@ -107,11 +114,6 @@ void _broadcast_run(struct controller *recepient, char *cmds)
     {
         fprintf(stderr, "\n[-]Error in sending bcast %s to %s\n", cmds, inet_ntoa(recepient->addr.sin_addr));
     }
-}
-
-void *cleanup_run(void *a)
-{
-
 }
 
 int send_pkt_back(struct controller *recepient, char *cmds, struct mutex_call *mcall)
