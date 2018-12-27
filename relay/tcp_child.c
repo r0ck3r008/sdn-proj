@@ -38,17 +38,6 @@ int tcp_child()
     {
         new=_alloc_new(1);
 
-        if(i==1)
-        {
-            pthread_t cleanup_id;
-            if((stat=pthread_create(&cleanup_id, NULL, cleanup_run, NULL))!=0)
-            {
-                fprintf(stderr, "\n[-]Error in starting cleanup thread: %s\n", strerror(errno));
-                hard_exit=i;
-                break;
-            }
-        }
-
         if((new->ctrlr->bcast_sock=accept(tcp_sock, (struct sockaddr *)&new->ctrlr->addr, &len))==-1)
         {
             fprintf(stderr, "\n[-]Error in accepting client %d: %s\n", i, strerror(errno));
