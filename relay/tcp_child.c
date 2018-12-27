@@ -36,7 +36,7 @@ int tcp_child()
     //main loop
     for(int i=0;;)
     {
-        new=_allocate_new(1);
+        new=_alloc_new(1);
 
         if(i==1)
         {
@@ -194,7 +194,7 @@ int _connect_back(struct controller *client)
     return ret;
 }
 
-union node *_allocate_new(int flag)
+union node *_alloc_new(int flag)
 {
     union node *new=(union node *)allocate("union node", 1);
     new->nxt=NULL;
