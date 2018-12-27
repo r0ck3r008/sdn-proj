@@ -4,10 +4,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<stdint.h>
 #include<unistd.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<sodium.h>
 #include<pthread.h>
 #include<errno.h>
 
@@ -80,8 +82,10 @@ int tcp_child()
 void *_cli_run(void *a)
 {
     int tag=*(int *)a;
+    uint32_t limit=1000000;
     char *cmdr=(char *)allocate("char", 512);
     sprintf(cmdr, "genesis");
+    struct mutex_call *mcall;
     union node *client;
     if((client=_client_helper(tag))==NULL)
     {
@@ -98,11 +102,14 @@ void *_cli_run(void *a)
             break;
         }
 
-        struct mutex_call *mcall=alloc_mcall(3, 3, &ctrlr_ro_mtx, &ctrlr_mtx, &bmn_mtx);
         if(strcasestr(cmdr, "broadcast")!=NULL)
         {
+            mcall=alloc_mcall(3, 3, &ctrlr_ro_mtx, &ctrlr_mtx, &bmn_mtx);
+            uint32_t *rand=(uint32_t *)allocate("uint32_t", 1);
+            *rand=randombytes_uniform(limit);
+
             //broadcast
-            if(broadcast(client->ctrlr, cmdr, mcall))
+            if(broadcast(client->ctrlr, cmdr, mcall, rand))
             {
                 fprintf(stderr, "\n[-]Error in broadcasting for %s\n", inet_ntoa(client->ctrlr->addr.sin_addr));
                 break;
@@ -110,6 +117,7 @@ void *_cli_run(void *a)
         }
         else if(strcasestr(cmdr, "found")!=NULL)
         {
+            mcall=alloc_mcall(2, 1, &bmn_mtx);
             //snd_pkt back
             if(send_pkt_back(client->ctrlr, cmdr, mcall))
             {
@@ -129,15 +137,15 @@ exit:
     close(client->ctrlr->sock);
     //deallocate buffer and structures
     struct func_call *fcall=alloc_fcall(2);
-    struct mutex_call*mcall=alloc_mcall(1, 1, &ctrlr_mtx);
+    struct mutex_call*mcall2=alloc_mcall(1, 1, &ctrlr_mtx);
 
-    if(lock_and_exec(mcall, fcall, 3, client, 0, tag))
+    if(lock_and_exec(mcall2, fcall, 3, ctrlr_start, 0, tag))
     {
         fprintf(stderr, "\n[-]Error in deleting node %s:%d\n", inet_ntoa(client->ctrlr->addr.sin_addr), ntohs(client->ctrlr->addr.sin_port));
     }
     deallocate(cmdr, "char", 512);
     deallocate(fcall, "struct func_call", 1);
-    deallocate(mcall, "struct mutex_call", 1);
+    deallocate(mcall2, "struct mutex_call", 1);
     //exit
     pthread_exit(NULL);
 }
