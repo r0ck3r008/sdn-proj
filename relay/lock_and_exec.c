@@ -3,6 +3,10 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdarg.h>
+#include<stdint.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
 #include<pthread.h>
 #include<errno.h>
 
@@ -38,6 +42,16 @@ int lock_and_exec(struct mutex_call *mcall, struct func_call *fcall, int num, ..
         union node *ret=va_arg(lst, union node *), *start=va_arg(lst, union node *);
         int tag=va_arg(lst, int);
         ret=fcall->find(start, tag);
+    }
+    else if(fcall->del!=NULL)
+    {
+        union node *start=va_arg(lst, union node *);
+        int flag=va_arg(lst, int), tag=va_arg(lst, int);
+
+        if(fcall->del(start, flag, tag))
+        {
+            ret=1;
+        }
     }
     else if(fcall->len!=NULL)
     {
