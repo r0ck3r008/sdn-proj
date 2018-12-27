@@ -1,4 +1,4 @@
-ALL_OBJS= main.o server.o tcp_child.o broadcast.o lock_and_exec.o list.o sock_create.o snd_rcv.o allocate.o alarm.o
+ALL_OBJS= main.o server.o tcp_child.o broadcast.o lock_and_exec.o list.o sock_create.o snd_rcv.o allocate.o
 LINKER_FLAGS= -g -pthread -lsodium -o
 COMPILER_FLAGS=-g -c
 
@@ -33,9 +33,6 @@ snd_rcv.o: snd_rcv.c
 
 allocate.o: allocate.c
 	gcc -I${MAKE_PATH} ${COMPILER_FLAGS} allocate.c
-
-alarm.o: alarm.c
-	gcc -I${MAKE_OPTS} ${COMPILER_FLAGS} alarm.c
 
 clean_objs: ${ALL_OBJS}
 	rm -f ./*.o
