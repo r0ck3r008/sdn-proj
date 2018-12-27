@@ -20,7 +20,7 @@ broadcast.o: broadcast.c
 	gcc -I${MAKE_PATH} ${COMPILER_FLAGS} broadcast.c
 
 lock_and_exec.o: lock_and_exec.c
-	gcc -I${MAKE_PATH} ${COMPILER_FLAGS} server.c
+	gcc -I${MAKE_PATH} ${COMPILER_FLAGS} lock_and_exec.c
 
 list.o: list.c
 	gcc -I${MAKE_PATH} ${COMPILER_FLAGS} list.c
