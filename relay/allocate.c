@@ -16,83 +16,83 @@
 
 void *allocate(char *type, int size)
 {
-    void *ret=NULL;
+	void *ret=NULL;
 
-    if(!strcmp(type, "char"))
-    {
-        ret=malloc(sizeof(char)*size);
-        explicit_bzero(ret, sizeof(char)*size);
-    }
-    if(!strcmp(type, "uint32_t"))
-    {
-        ret=malloc(sizeof(uint32_t)*size);
-        explicit_bzero(ret, sizeof(uint32_t)*size);
-    }
-    else if(!strcmp(type, "struct controller"))
-    {
-        ret=malloc(sizeof(struct controller)*size);
-        explicit_bzero(ret, sizeof(struct controller)*size);
-    }
-    else if(!strcmp(type, "struct bcast_msg_node"))
-    {
-        ret=malloc(sizeof(struct bcast_msg_node)*size);
-        explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
-    }
-    else if(!strcmp(type, "union node"))
-    {
-        ret=malloc(sizeof(union node)*size);
-        explicit_bzero(ret, sizeof(union node)*size);
-    }
-    else if(!strcmp(type, "struct func_call"))
-    {
-        ret=malloc(sizeof(struct func_call)*size);
-        explicit_bzero(ret, sizeof(struct func_call)*size);
-    }
-    else if(!strcmp(type, "struct mutex_call"))
-    {
-        ret=malloc(sizeof(struct mutex_call)*size);
-        explicit_bzero(ret, sizeof(struct mutex_call)*size);
-    }
+	if(!strcmp(type, "char"))
+	{
+		ret=malloc(sizeof(char)*size);
+		explicit_bzero(ret, sizeof(char)*size);
+	}
+	if(!strcmp(type, "uint32_t"))
+	{
+		ret=malloc(sizeof(uint32_t)*size);
+		explicit_bzero(ret, sizeof(uint32_t)*size);
+	}
+	else if(!strcmp(type, "struct controller"))
+	{
+		ret=malloc(sizeof(struct controller)*size);
+		explicit_bzero(ret, sizeof(struct controller)*size);
+	}
+	else if(!strcmp(type, "struct bcast_msg_node"))
+	{
+		ret=malloc(sizeof(struct bcast_msg_node)*size);
+		explicit_bzero(ret, sizeof(struct bcast_msg_node)*size);
+	}
+	else if(!strcmp(type, "union node"))
+	{
+		ret=malloc(sizeof(union node)*size);
+		explicit_bzero(ret, sizeof(union node)*size);
+	}
+	else if(!strcmp(type, "struct func_call"))
+	{
+		ret=malloc(sizeof(struct func_call)*size);
+		explicit_bzero(ret, sizeof(struct func_call)*size);
+	}
+	else if(!strcmp(type, "struct mutex_call"))
+	{
+		ret=malloc(sizeof(struct mutex_call)*size);
+		explicit_bzero(ret, sizeof(struct mutex_call)*size);
+	}
 
-    if(ret==NULL)
-    {
-        fprintf(stderr, "\n[-]Error in allocating %d bytes for %s type\n", size, type);
-        _exit(-1);
-    }
+	if(ret==NULL)
+	{
+		fprintf(stderr, "\n[-]Error in allocating %d bytes for %s type\n", size, type);
+		_exit(-1);
+	}
 
-    return ret;
+	return ret;
 }
 
 void deallocate(void *a, char *type, int size)
 {
-    if(!strcmp(type, "char"))
-    {
-        explicit_bzero(a, sizeof(char)*size);
-    }
-    if(!strcmp(type, "uint32_t"))
-    {
-        explicit_bzero(a, sizeof(uint32_t)*size);
-    }
-    else if(!strcmp(type, "struct controller"))
-    {
-        explicit_bzero(a, sizeof(struct controller)*size);
-    }
-    else if(!strcmp(type, "struct bcast_msg_node"))
-    {
-        explicit_bzero(a, sizeof(struct bcast_msg_node)*size);
-    }
-    else if(!strcmp(type, "union node"))
-    {
-        explicit_bzero(a, sizeof(union node)*size);
-    }
-    else if(!strcmp(type, "struct func_call"))
-    {
-        explicit_bzero(a, sizeof(struct func_call)*size);
-    }
-    else if(!strcmp(type, "struct mutex_call"))
-    {
-        explicit_bzero(a, sizeof(struct mutex_call)*size);
-    }
+	if(!strcmp(type, "char"))
+	{
+		explicit_bzero(a, sizeof(char)*size);
+	}
+	if(!strcmp(type, "uint32_t"))
+	{
+		explicit_bzero(a, sizeof(uint32_t)*size);
+	}
+	else if(!strcmp(type, "struct controller"))
+	{
+		explicit_bzero(a, sizeof(struct controller)*size);
+	}
+	else if(!strcmp(type, "struct bcast_msg_node"))
+	{
+		explicit_bzero(a, sizeof(struct bcast_msg_node)*size);
+	}
+	else if(!strcmp(type, "union node"))
+	{
+		explicit_bzero(a, sizeof(union node)*size);
+	}
+	else if(!strcmp(type, "struct func_call"))
+	{
+		explicit_bzero(a, sizeof(struct func_call)*size);
+	}
+	else if(!strcmp(type, "struct mutex_call"))
+	{
+		explicit_bzero(a, sizeof(struct mutex_call)*size);
+	}
 
-    free(a);
+	free(a);
 }

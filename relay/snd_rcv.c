@@ -9,28 +9,28 @@
 
 int snd(int fd, char *cmds, char *reason, int free_it)
 {
-    if(send(fd, cmds, sizeof(char)*512, 0)==-1)
-    {
-        fprintf(stderr, "\n[-]Error in sendig %s for %s: %s\n", cmds, reason, strerror(errno));
-        return 1;
-    }
-    
-    if(free_it)
-    {
-        deallocate(cmds, "char", 512);
-    }
-    return 0;
+	if(send(fd, cmds, sizeof(char)*512, 0)==-1)
+	{
+		fprintf(stderr, "\n[-]Error in sendig %s for %s: %s\n", cmds, reason, strerror(errno));
+		return 1;
+	}
+	
+	if(free_it)
+	{
+		deallocate(cmds, "char", 512);
+	}
+	return 0;
 }
 
 char *rcv(int fd, char *reason)
 {
-    char *cmdr=(char *)allocate("char", 512);
+	char *cmdr=(char *)allocate("char", 512);
 
-    if(recv(fd, cmdr, sizeof(char)*512, 0)==-1)
-    {
-        fprintf(stderr, "\n[-]Error in receving for %s: %s\n", reason, strerror(errno));
-        return NULL;
-    }
+	if(recv(fd, cmdr, sizeof(char)*512, 0)==-1)
+	{
+		fprintf(stderr, "\n[-]Error in receving for %s: %s\n", reason, strerror(errno));
+		return NULL;
+	}
 
-    return cmdr;
+	return cmdr;
 }

@@ -5,29 +5,29 @@ int tcp_sock;
 int *done_bcast_nodes;
 int ctrlr_rc;
 
-    #ifdef NEEDS_STRUCT
+	#ifdef NEEDS_STRUCT
 
-        struct controller
-        {
-            int bcast_sock, sock;
-            struct sockaddr_in addr;
-        };
-        
-        struct bcast_msg_node
-        {
-            int done;
-            char *msg;
-            struct controller *sender;
-        };
+		struct controller
+		{
+			int bcast_sock, sock;
+			struct sockaddr_in addr;
+		};
+		
+		struct bcast_msg_node
+		{
+			int done;
+			char *msg;
+			struct controller *sender;
+		};
 
-        union node
-        {
-            int tag;
-            struct controller *ctrlr;
-            struct bcast_msg_node *bmn;
-            union node *nxt;
-            union node *prev;
-        } *ctrlr_start, *bmn_start;
+		union node
+		{
+			int tag;
+			struct controller *ctrlr;
+			struct bcast_msg_node *bmn;
+			union node *nxt;
+			union node *prev;
+		} *ctrlr_start, *bmn_start;
 
-    #endif
+	#endif
 #endif

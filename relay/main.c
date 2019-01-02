@@ -8,24 +8,24 @@
 
 int _init_argv(int argc)
 {
-    if(argc!=2)
-    {
-        fprintf(stderr, "\n[!]Usage: ./relay [ip_for_tcp]\n");
-        return 1;
-    }
+	if(argc!=2)
+	{
+		fprintf(stderr, "\n[!]Usage: ./relay [ip_for_tcp]\n");
+		return 1;
+	}
 
-    return 0;
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    if(_init_argv(argc))
-    {
-        _exit(-1);
-    }
+	if(_init_argv(argc))
+	{
+		_exit(-1);
+	}
 
-    if(server_workings(argv[1])==-1)
-    {
-        _exit(-1);
-    }
+	if(server_workings(argv[1])==-1)
+	{
+		_exit(-1);
+	}
 }
