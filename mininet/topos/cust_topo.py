@@ -1,16 +1,7 @@
-#!/usr/bin/python
-
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
-
-def read_files():
-    global controllers
-    controllers{}
-
-    with open('controllers', 'r') as f:
-
 
 def myNet():
 
