@@ -15,10 +15,13 @@ def send_query(t, query):
     try:
         t[1].execute(query)
 
-        if 'update' in strtolower(query) or 'insert' in strtolower(query):
+        if 'update' in strtolower(query) or 'insert' in strtolower(query) or 'create' in strtolower(query):
             t[0].commit()
 
         print('[!]Successfully executed query {}'.format(query))
+        rows=t[1].fetchal()
+
+        return rows
     except Exception as e:
         print('[-]Error in executing query {}: e'.format(query, e))
 
@@ -38,6 +41,20 @@ def fetch_controllers(host, uname, passwd):
 
     return controllers
 
-def update_controller_db(hosts):
-    pass
+def update_controller_db(c_sw, hosts, host, uname, passwd):
+    conn, cur=init_db(host, uname, passwd, 'network')
 
+    #create table
+    query='CREATE TABEL {} (sno int, Host varchar(50))'.format(c_sw[0].IP())
+    rows=send_query((conn, cur), query)
+
+    #add hosts
+    query="INSERT INTO {} ('".format(c_sw[0].IP())
+    for h in hosts:
+        query=query+"{}'".format(h.IP())
+        if h!=hosts[-1]:
+            query=query+",'"
+        else:
+            query=query+")"
+
+    rows=send_query((conn, cur), query)
