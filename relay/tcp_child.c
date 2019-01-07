@@ -165,6 +165,7 @@ union node *_client_helper(int tag)
 	}
 
 	//connect back
+	sleep(1);
 	if(_connect_back(client->ctrlr))
 	{
 		goto exit;
