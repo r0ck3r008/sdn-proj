@@ -45,7 +45,7 @@ def update_controller_db(c_sw, hosts, host, uname, passwd):
     conn, cur=init_db(host, uname, passwd, 'network')
 
     #create table
-    query='CREATE TABEL {} (sno int, Host varchar(50))'.format(c_sw[0].IP())
+    query='CREATE TABLE {} (Host varchar(50))'.format(c_sw[0].IP())
     rows=send_query((conn, cur), query)
 
     #add hosts
