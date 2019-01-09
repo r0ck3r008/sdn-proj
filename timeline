@@ -1,5 +1,0 @@
-Start up database/mariadb image
-Start relay
-Start ctrlr_handler and connect to db_image container
-Start controllers, wait for full updation into database controllers
-Start mininet script, wait for network database to populate

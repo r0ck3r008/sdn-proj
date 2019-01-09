@@ -1,1 +1,0 @@
-in cl_run, make cmdr a receive queue rather than a single buffer to maximize the efficiency
