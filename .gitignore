@@ -4,3 +4,4 @@ controllers/librelay/librelay.so
 pox/*
 controllers/pox/ext/*.pyc
 papers/*
+controllers/ctrlr_handler/__pycache__
