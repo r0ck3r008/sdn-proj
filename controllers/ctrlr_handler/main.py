@@ -5,7 +5,6 @@ import importlib as ilib
 import sys
 
 directory='/home/naman/git/sdn-proj/controllers/ctrlr_handler'
-gdef=ilib.import_module('global_defs', directory)
 s_workings=ilib.import_module('server_workings', directory)
 
 def init_db_cxn(host, uname, passwd, db_name):
@@ -29,11 +28,11 @@ if __name__=='__main__':
     args=parser.parse_args()
 
     #get passwd
-    passwd=getpasswd('Enter password of DB {}'.format(args.db_name))
+    passwd=getpass('Enter password of DB {} '.format(args.db_name))
 
     #init_cxn
-    gdef.conn, gdef.cur=init_db_cxn(host, uname, passwd, db_name)
+    conn, cur=init_db_cxn(args.host, args.uname, passwd, args.db_name)
 
     #server workings
-    s_workings.start()
+    s_workings.start(conn, cur)
 

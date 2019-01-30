@@ -2,9 +2,6 @@ from socket import AF_INET, SOCK_STREAM, socket
 import importlib as ilib
 from threading import Thread, Lock
 
-directory='/home/naman/sdn-proj/controllers/ctrlr_handler'
-gdef=ilib.import_module('global_defs', directory)
-
 def sock_create(addr, flag):
     try:
         s=socket(AF_INET, SOCK_STREAM)
@@ -33,25 +30,25 @@ def get_self_ip():
 def send_query(query):
     try:
         #lock it
-        gdef.mutex.acquire()
+        mutex.acquire()
         #exec and commit
-        gdef.cur.execute(query)
-        gdef.conn.commit()
-        rows=gdef.cur.fetchall()
+        curr.execute(query)
+        conn.commit()
+        rows=cur.fetchall()
         #unlock
-        gdef.mutex.release()
+        mutex.release()
         print('[!]Query {} executed and commited successfully'.format(query))
         return rows
     except Exception as e:
         print('[-]Error in executing query {} sent by the client: {}'.format(query, e))
-        if gdef.mutex.locked():
-            gdef.mutex.release()
+        if mutex.locked():
+            mutex.release()
 
 def cli_run(sock):
     try:
         cmdr=sock.recv(512)
-        rows=send_query(cmds)
-        sock.send('{}'.format(rows))
+        rows=send_query(cmdr)
+        sock.send('{}'.format(rows).encode())
         print('[!]Sent {} back to client {}'.format(rows, sock.getsockname()))
         sock.close()
     except Exception as e:
@@ -60,18 +57,25 @@ def cli_run(sock):
 def server_run():
     try:
         #initiate the mutex
-        gdef.mutex=Lock()
+        global mutex
+        mutex=Lock()
+        print('Type of socket is {}'.format(type(sock)))
         while True:
             #accept new cxn
-            client_sock=gdef.sock.accept()
-            print('[1]Accepted client at {}'.format(client_sock.getsockname()))
+            client_sock=sock.accept()
+            print('[1]Accepted client at {}'.format(client_sock[0].getsockname()))
             #init process
-            thr=Thread(target=cli_run, args=[client_sock,])
+            thr=Thread(target=cli_run, args=[client_sock[0],])
             thr.start()
-            print('[!]Started client handler thread for {}'.format(client_sock.getsockname()))
+            print('[!]Started client handler thread for {}'.format(client_sock[1]))
     except Exception as e:
         print('[-]Error in accept function {}'.format(e))
 
-def start():
-    gdef.sock=sock_create((get_self_ip(), 12346), 0)
+def start(co, cu):
+    global conn, curr
+    conn=co
+    curr=cu
+
+    global sock
+    sock=sock_create((get_self_ip(), 12346), 0)
     server_run()
