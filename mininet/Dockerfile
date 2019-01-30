@@ -6,7 +6,7 @@ RUN echo 'nameserver 1.1.1.1' > /etc/resolv.conf
 RUN apt-get update
 
 #install mininet and required networking tools
-RUN apt-get -y install mininet iproute2 ethtool tcpdump net-tools iputils-ping lsof vim tmux
+RUN apt-get -y install mininet iproute2 ethtool tcpdump net-tools iputils-ping lsof vim tmux python-libnacl python-mysqldb
 
 #expose ports
 EXPOSE 6633 6653 6640
