@@ -5,3 +5,4 @@ pox/*
 controllers/pox/ext/*.pyc
 papers/*
 controllers/ctrlr_handler/__pycache__
+mininet/topos/*.pyc
