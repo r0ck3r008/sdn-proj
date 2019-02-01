@@ -3,6 +3,10 @@ import importlib as ilib
 
 gdef=ilib.import_module('global_defs', '/ryu/apps')
 
+#globals
+bcast_sock=0
+sock=0
+
 def sock_create(addr, flag):
     try:
         s=socket(AF_INET, SOCK_STREAM)
@@ -23,7 +27,7 @@ def sock_create(addr, flag):
 
 def get_self_addr():
     #connect(fake)
-    s=sock_create(('1.1.1.1', 80))
+    s=sock_create(('1.1.1.1', 80), 1)
     #get name and disconnect
     ret=s.getsockname()[0]
     s.close()
@@ -32,25 +36,25 @@ def get_self_addr():
 
 def update_db(self_ip):
     #connect
-    db_sock=sock_create(gdef.db_interface_addr)
+    db_sock=sock_create(gdef.db_interface_addr, 1)
     
     query=("INSERT INTO controllers VALUES ('{}')".format(self_ip))
     db_sock.send(query.encode())
 
-    print('[!]Received from db_interface: {}'.format(db_sock.recv().decode()))
+    print('[!]Received from db_interface: {}'.format(db_sock.recv(512).decode()))
 
     db_sock.close()
 
 def init_main():
-    self_ip=get_self_ip()
+    self_ip=get_self_addr()
     #database handller
     update_db(self_ip)
         
     #connect to relay
-#    gdef.bcast_sock=sock_create((self_ip, 6666), flag=1)
+#    bcast_sock=sock_create((self_ip, 6666), flag=1)
 
     #get a connection back from relay
 #    sock=sock_create(gdef.self_addr, flag=0)
-#    gdef.sock=sock.accept()
+#    sock=sock.accept()
 #    print('[!]Got relay connection back')
 
