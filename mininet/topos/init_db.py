@@ -19,33 +19,19 @@ def send_query(query, t):
 
         print('[1]Query executed successfully')
 
-        rows=t[0].fetchall()
-        return rows
+        rows=t[1].fetchall()
+        ret=[]
+        for i in rows:
+            ret.append(i[0])
+
+        return ret
     except Exception as e:
         print('[-]Error in executing query {}: {}'.format(query, e))
 
 def update_network(ctrlr, swi_host, cxn):
-    queries=[]
-
-    queries.append("CREATE TABLE {} (nodes varchar(50));".format(ctrlr.IP()))
-
-    query="INSERT INTO {} VALUES (".format(ctrlr.IP())
-    i=0
-    for s_h in swi_host:
-        if i==0:
-            query2=query2.join("'{}'".format(s_h.MAC()))
-            i=i+1
+    print('[!]Ctrlr_ip: {}'.format(ctrlr.IP()))
+    for s_h in  swi_host:
+        if s_h==swi_host[0]:
+            print('[!]Switch mac is: {}'.format(s_h.MAC()))
         else:
-            query2=query2.join("'{}'".format(s_h.IP()))
-
-    query2=query2.join(");")
-    queries.append(query2)
-
-    try:
-        for query in queries:
-            rows=send_query(query, cxn)
-            print('[!]received from DB: {}'.format(rows))
-
-    except Exception as e:
-        print('[-]Error in updating {} table: {}'.format(ctrlr.IP(), e))
-
+            print('[!]Host {} IP is: {}'.format(swi_host.index(s_h), s_h.IP()))
