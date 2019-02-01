@@ -5,8 +5,9 @@ from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.cli import CLI as cli
 from libnacl import randombytes_uniform
+import sys
 
-db_handler=import_module('db_handler', '/ryu/apps')
+init_db=import_module('init_db', '/topos')
 
 def init_controllers(ctrlr_ip):
     t=[]
@@ -59,31 +60,33 @@ def make_topo(controllers, switches, hosts):
             topo[ctrlr].append(host)
 
     net.build()
+    print(topo)
     return topo
 
 
 if __name__=='__main__':
     #args
     parser=ArgumentParser()
-    parser.add_argumen('-D', '--db_host', required=True, metavar='', dest='db_host', help='Enter the database host name')
-    parser.add_argumen('-u', '--db_uname', required=True, metavar='', dest='db_uname', help='Enter the database user name')
-    parser.add_argumen('-H', '--hosts', required=True, metavar='', dest='hosts', type=int, help='Enter the number of hosts')
-    parser.add_argumen('-s', '--switches', required=True, metavar='', dest='swi', type=int, help='Enter the database host name')
+    parser.add_argument('-D', '--db_host', required=True, metavar='', dest='db_host', help='Enter the database host name')
+    parser.add_argument('-u', '--db_uname', required=True, metavar='', dest='db_uname', help='Enter the database user name')
+    parser.add_argument('-H', '--hosts', required=True, metavar='', dest='hosts', type=int, help='Enter the number of hosts')
+    parser.add_argument('-s', '--switches', required=True, metavar='', dest='swi', type=int, help='Enter the database host name')
     args=parser.parse_args()
 
     #get passwd
-    passwd=getpasswd('Enter Password for username {}: '.format(args.db_uname))
+    passwd=getpass('Enter Password for username {}: '.format(args.db_uname))
 
     #get connection
     global conn_ctrlr, conn_net, cur_ctrlr, cur_net
-    conn_ctrlr, cur_ctrlr=db_handler.init_db(args.db_host, args.db_uname, passwd, 'controllers')
-    conn_net, cur_net=db_handler.init_db(args.db_host, args.db_uname, passwd, 'network')
+    conn_ctrlr, cur_ctrlr=init_db.init_db(args.db_host, args.db_uname, passwd, 'controllers')
+    conn_net, cur_net=init_db.init_db(args.db_host, args.db_uname, passwd, 'network')
 
     #get controllers
-    ctrlr_ip=db_handler.send_query("Select * from controllers;", (conn_ctrlr, cur_ctrlr))
+    ctrlr_ip=init_db.send_query("Select * from controllers;", (conn_ctrlr, cur_ctrlr))
+    print(ctrlr_ip)
 
     #check switch and controller num
-    if args.swi!=ctrlr_ip.len():
+    if args.swi!=len(ctrlr_ip):
         print('[!]Multiple switches under controllers unsupported!!!\nExiting now!')
         sys.exit(-1)
 
@@ -106,7 +109,8 @@ if __name__=='__main__':
     #update database
     ctrlrs=topo.keys()
     for ctrlr in ctrlrs:
-        db_handler.update_network(ctrlr, topo[ctrlr], (conn_net, cur_net))
+        init_db.update_network(ctrlr, topo[ctrlr], (conn_net, cur_net))
+        time.sleep(1)
 
     #necessary shananigans
     cli(net)
