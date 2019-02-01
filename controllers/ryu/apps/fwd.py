@@ -6,9 +6,6 @@ from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
-import importlib as ilib
-
-main=ilib.import_module('main', '/ryu/apps')
 
 #every class needs to inherit app_manager RyuApp class
 class learn_sw(app_manager.RyuApp):
@@ -18,7 +15,6 @@ class learn_sw(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(learn_sw, self).__init__(*args, **kwargs)
         self.mac_to_port={}
-        main.init_main()
 
     def add_flow(self, datapath, port, dst, src, actions):
         #extract openflow protocol
@@ -73,6 +69,7 @@ class learn_sw(app_manager.RyuApp):
         #extract source and destination
         src=eth.src
         dst=eth.dst
+        print('[!]Dst is {}, Src is {}, msg is {}'.format(dst, src, msg))
 
         #extract datapath id
         dpid=datapath.id
