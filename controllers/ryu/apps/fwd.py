@@ -4,8 +4,10 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet
+from ryu.lib.packet import ethernet, arp
 from ryu.lib.packet import ether_types
+
+db=['192.168.1.2', '192.168.1.3']
 
 #every class needs to inherit app_manager RyuApp class
 class learn_sw(app_manager.RyuApp):
@@ -61,15 +63,21 @@ class learn_sw(app_manager.RyuApp):
         pkt=packet.Packet(msg.data)
         #get the very first protocol or the physical layer header
         eth=pkt.get_protocols(ethernet.ethernet)[0]
+        arp_hdr=pkt.get_protocols(arp.arp)[0]
 
-        #ignore lldp packet as it doesnt have dst and source
-        if eth.ethertype==ether_types.ETH_TYPE_LLDP:
+        if arp!=[]:
+            print(arp_hdr)
             return
+            
+        else:
+            #ignore lldp packet as it doesnt have dst and source
+            if eth.ethertype==ether_types.ETH_TYPE_LLDP:
+                return
 
-        #extract source and destination
-        src=eth.src
-        dst=eth.dst
-        print('[!]Dst is {}, Src is {}, msg is {}'.format(dst, src, msg))
+            #extract source and destination
+            src=eth.src
+            dst=eth.dst
+
 
         #extract datapath id
         dpid=datapath.id
