@@ -6,7 +6,7 @@ RUN echo 'nameserver 1.1.1.1' > /etc/resolv.conf
 RUN apt-get update
 
 #install utils
-RUN apt-get -y install git tmux python vim python-setuptools python-pip net-tools lsof tcpdump 
+RUN apt-get -y install git tmux python vim python-setuptools python-pip net-tools lsof tcpdump python-mysqldb 
 
 #pip installs
 RUN pip install tinyrpc webob routes ovs oslo.config msgpack eventlet lxml paramiko sqlalchemy ncclient
