@@ -10,12 +10,9 @@ mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` --execute="DELETE FROM mysq
 mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` --execute="FLUSH PRIVILEGES"
 
 #create databases
-mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` --execute="CREATE DATABASE controllers"
 mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` --execute="CREATE DATABASE network"
 
 #copy databases
-mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` controllers < /dumps/controllers.sql
-mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` network < /dumps/network.sql
 mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` mysql < /dumps/mysql.sql
 mysql -u root --password=`echo $MYSQL_ROOT_PASSWORD` --execute="FLUSH PRIVILEGES"
 
