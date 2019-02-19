@@ -1,13 +1,20 @@
+#check required executables
+docker := `which docker`
+#path
 export MAKE_PATH=${PWD}
 export COMPILER=gcc
 
-all: ryu_docker mininet_docker librelay.so
+#targets
+all: docker ryu_docker mininet_docker mariadb_custom
+
+ifndef docker:
+	$(error "Docker is unavailable, please install latest version of docker before making")
 
 ryu_docker: ${MAKE_PATH}/controllers/ryu/Makefile
-	make -C ${MAKE_PATH}/controllers/ryu 
+	make -C ${MAKE_PATH}/controllers/ryu
 
 mininet_docker: ${MAKE_PATH}/mininet/Makefile
 	make -C ${MAKE_PATH}/mininet
 
-librelay.so: ${MAKE_PATH}/relay/Makefile
-	make -C ${MAKE_PATH}/relay
+mariadb_custom: ${MAKE_PATH}/database/Makefile
+	make -C ${MAKE_PATH}/database
