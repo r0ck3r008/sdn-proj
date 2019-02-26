@@ -63,8 +63,6 @@ class SimpleSwitch12(app_manager.RyuApp):
         else:
             out_port=ofproto.OFPP_FLOOD
 
-        print('[!!!!]mac_to_port: {}'.format(self.mac_to_port))
-
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
 
         # install a flow to avoid packet_in next time
