@@ -8,3 +8,5 @@ controllers/ctrlr_handler/__pycache__
 mininet/topos/*.pyc
 mininet/topos/try/*
 controllers/ryu/apps/try*
+relay/pipe
+relay/uds
