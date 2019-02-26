@@ -6,18 +6,14 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
-from importlib import import_module
-
-ctrlr_handler=import_module('ctrlr_handler', '/ryu/apps')
 
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch12, self).__init__(*args, **kwargs)
-        self.macs=ctrlr_handler.init()
         self.mac_to_port = {}
-        print('The MAC addresses in network are: {}'.format(self.macs))
+        self.blacklist=[]
 
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
@@ -25,8 +21,12 @@ class SimpleSwitch12(app_manager.RyuApp):
         match = datapath.ofproto_parser.OFPMatch(in_port=port,
                                                  eth_dst=dst,
                                                  eth_src=src)
-        inst = [datapath.ofproto_parser.OFPInstructionActions(
-                ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        if dst not in self.blacklist:
+            inst = [datapath.ofproto_parser.OFPInstructionActions(
+                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        else:
+            inst = [datapath.ofproto_parser.OFPInstructionActions(
+                    ofproto.OFPIT_CLEAR_ACTIONS, [])]
 
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, cookie=0, cookie_mask=0, table_id=0,
@@ -61,10 +61,12 @@ class SimpleSwitch12(app_manager.RyuApp):
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
 
-        if dst in self.mac_to_port[dpid]:
+        if dst in self.blacklist:
+            out_port=ofproto.OFPP_IN_PORT
+        elif dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
             #check here if contents of this match the self.mac, if yes, means arp is done, send to relay
-        if dst in self.macs:
+        else:
             out_port = ofproto.OFPP_FLOOD
 
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
