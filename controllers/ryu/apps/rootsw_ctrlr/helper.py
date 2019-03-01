@@ -43,9 +43,15 @@ def cli_run(rel_addr, pipe_name):
             cmdr=pipe.read()
         snd(cli_sock, cmdr, rel_addr)
 
-def svr_run(self_addr, blacklist, mtx):
+def get_self_addr():
+    sock=sock_create(('1.1.1.1', 80), 1)
+    ret=sock.getsock_name()[0]
+    sock.close()
+    return ret
+
+def svr_run(self_port, blacklist, mtx):
     #start the server
-    svr_sock=sock_create(self_addr, 0)
+    svr_sock=sock_create((get_self_addr(), self_port), 0)
     
     #accept connection
     try:
