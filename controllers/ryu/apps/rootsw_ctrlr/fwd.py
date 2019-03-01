@@ -7,10 +7,10 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from threading import Thread as thread, Lock as lock
-from importlib import import_module
+#import importlib
 
-helper=import_module('helper', '/ryu/apps/rootsw_ctrlr')
-cfg=import_module('cfg', '/ryu/apps/rootsw_ctrlr')
+#helper=importlib.import_module('helper', '/ryu/apps/rootsw_ctrlr')
+#cfg=importlib.import_module('cfg', '/ryu/apps/rootsw_ctrlr')
 
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
@@ -21,11 +21,11 @@ class SimpleSwitch12(app_manager.RyuApp):
         self.mac_to_port = {}
         self.blacklist=[]
         rel_addr=(cfg.rel_addr, cfg.rel_port)
-        self_addr=(cfg.self_addr, (12346 if cfg.port==None else cfg.port))
+        self_port=(12346 if cfg.port==None else cfg.port)
         pipe_name=('pipe' if cfg.pipe_name==None else cfg.pipe_name)
         self.mtx=lock()
         #start server thread
-        svr_thr=thread(target=helper.svr_run, args=(self_addr, self.blacklist, self.mtx))
+        svr_thr=thread(target=helper.svr_run, args=(self_port, self.blacklist, self.mtx))
         svr_thr.start()
 
         #start client thread
