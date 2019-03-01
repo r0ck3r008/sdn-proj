@@ -6,6 +6,7 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
+from time import time
 
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
@@ -13,6 +14,9 @@ class SimpleSwitch12(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch12, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        self.counter=0
+        self.start_time=int(time()*1000000)/1000000
+        self.first_sec=0
 
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
@@ -38,6 +42,11 @@ class SimpleSwitch12(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         in_port = msg.match['in_port']
+        self.counter+=1
+        cur_time=int(time()*1000000)/1000000
+        if self.counter==1:
+            self.first_sec=cur_time-self.start_time
+        print('[!]Counter is {} at {}th second, init was at {}'.format(self.counter, (cur_time-self.start_time), self.first_sec))
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
