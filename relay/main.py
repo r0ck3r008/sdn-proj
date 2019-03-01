@@ -13,10 +13,10 @@ def process_glbls():
     glbls['bind_addr']=(cfg.bind_addr, (12345 if cfg.bind_port==None else cfg.bind_port))
     glbls['uds_addr']=('./uds' if cfg.uds_addr==None else cfg.uds_addr)
     glbls['pipe_name']=('./pipe' if cfg.pipe_name==None else cfg.pipe_name)
-    glbls['db_host']=db_host
+    glbls['db_host']=cfg.db_host
     glbls['uname']=('relay' if cfg.uname==None else cfg.uname)
     glbls['db_name']=('topology' if cfg.db_name==None else cfg.db_name)
-    glbls['passwd']=getpass('[>]Enter password for username {}: '.format(uname))
+    glbls['passwd']=getpass('[>]Enter password for username {}: '.format(glbls['uname']))
     return glbls
 
 if __name__=='__main__':
