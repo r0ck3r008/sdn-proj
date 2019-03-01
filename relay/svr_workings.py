@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_STREAM, AF_UNIX
-from sys import exiti, stderr
+from sys import exit, stderr
 from multiprocessing import Process as process
 from importlib import import_module
 from os import path
