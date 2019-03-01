@@ -74,7 +74,7 @@ def handle_ctrlr(c_sock, addr, db_info, uds_addr, pipe_name):
     thr_p1.start()
 
     #create second thread
-    thr_p2=thread(target=handle_ctrlr_p2, args=(addr, pipe_name))
+    thr_p2=thread(target=handle_ctrlr_p2, args=((addr[0], 12346), pipe_name))
     thr_p2.start()
 
     #join them
