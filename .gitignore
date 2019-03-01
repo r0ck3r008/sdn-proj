@@ -1,4 +1,6 @@
 relay/relay.bin
+relay/cfg.py
+relay/__pycache__
 controllers/ryu/apps/*.pyc
 controllers/ryu/apps/rootsw_ctrlr/*.pyc
 controllers/ryu/apps/relsw_ctrlr/*.pyc
@@ -10,5 +12,6 @@ controllers/ctrlr_handler/__pycache__
 mininet/topos/*.pyc
 mininet/topos/try/*
 controllers/ryu/apps/try*
+controllers/ryu/apps/rootsw_ctrlr/cfg.py
 relay/pipe
 relay/uds
