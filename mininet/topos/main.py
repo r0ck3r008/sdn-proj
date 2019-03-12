@@ -180,8 +180,8 @@ if __name__=='__main__':
     net=Mininet(topo=None, autoSetMacs=True)
 
     #db init
-    passwd=getpass('Enter the password for username {}: '.format(('topology' if args.uname==None else args.uname)))
-    conn_net, cur_net=init_db(args.db_host, ('topology' if args.uname==None else args.uname), passwd, 'network')
+    #passwd=getpass('Enter the password for username {}: '.format(('topology' if args.uname==None else args.uname)))
+    #conn_net, cur_net=init_db(args.db_host, ('topology' if args.uname==None else args.uname), passwd, 'network')
 
     #form subnets
     topo=init_subnets(net, ctrlr_ip, args.subnets, args.hosts)
@@ -196,7 +196,7 @@ if __name__=='__main__':
     net.build()
 
     #update db
-    update_db((conn_net, cur_net), topo)
+    #update_db((conn_net, cur_net), topo)
 
     #init controllers
     ctrlrs=init_ctrlrs(net, ctrlr_ip)
@@ -211,5 +211,5 @@ if __name__=='__main__':
     net.stop()
 
     #end connection with db
-    cur_net.close()
-    conn_net.close()
+    #cur_net.close()
+    #conn_net.close()
