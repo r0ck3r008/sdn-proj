@@ -42,11 +42,11 @@ class SimpleSwitch12(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         in_port = msg.match['in_port']
-        self.counter+=1
-        cur_time=int(time()*1000000)/1000000
-        if self.counter==1:
-            self.first_sec=cur_time-self.start_time
-        print('[!]Counter is {} at {}th second, init was at {}'.format(self.counter, (cur_time-self.start_time), self.first_sec))
+#        self.counter+=1
+#        cur_time=int(time()*1000000)/1000000
+#        if self.counter==1:
+#            self.first_sec=cur_time-self.start_time
+#        print('[!]Counter is {} at {}th second, init was at {}'.format(self.counter, (cur_time-self.start_time), self.first_sec))
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
