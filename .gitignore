@@ -7,6 +7,7 @@ controllers/ryu/apps/relsw_ctrlr/*.pyc
 controllers/librelay/librelay.so
 pox/*
 controllers/pox/ext/*.pyc
+controllers/pox/ext/try/*
 papers/*
 controllers/ctrlr_handler/__pycache__
 mininet/topos/*.pyc
