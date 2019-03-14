@@ -4,6 +4,7 @@ from random import randint
 from sys import stderr, exit
 
 def sock_create(intf):
+    sock=None
     try:
         sock=socket(AF_PACKET, SOCK_RAW)
         sock.bind((intf, 0))
