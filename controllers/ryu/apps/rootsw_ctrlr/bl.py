@@ -115,6 +115,15 @@ class SimpleSwitch12(app_manager.RyuApp):
             flags=0, match=match, instructions=inst)
         datapath.send_msg(mod)
 
+    #mac_to_port is [dpid][mac][port]
+    def find_bad_mac(self, in_port, copy):
+        vals=copy.values()[0]
+        macs=vals.keys()
+        ports=vals.values()
+
+        return macs[ports.index(in_port)]
+
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
@@ -136,19 +145,11 @@ class SimpleSwitch12(app_manager.RyuApp):
 
         self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
 
-        # learn a mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
-
         if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
             #blacklisting action
             self.add_flow(datapath, in_port, dst, src, [])
-#            print('[!]Blacklisting {} port'.format(in_port))
-            if self.counter==0:
-                self.start_time=int(time()*1000000)%100000
-            curr_time=int(time()*1000000)%100000
-            print('[!]Diffrence is {}'.format(curr_time-self.start_time))
-            self.counter+=1
-#            print('[!]Avg is: {}'.format((self.counter/(curr_time-self.start_time))))
+            copy=self.mac_to_port
+            print('[!]Blacklisting {} port for MAC addr: {}'.format(in_port, self.find_bad_mac(in_port, copy)))
             if in_port not in self.blacklist:
                 self.blacklist.append(in_port)
             return
@@ -157,6 +158,9 @@ class SimpleSwitch12(app_manager.RyuApp):
             #check here if contents of this match the self.mac, if yes, means arp is done, send to relay
         else:
             out_port = ofproto.OFPP_FLOOD
+
+        # learn a mac address to avoid FLOOD next time.
+        self.mac_to_port[dpid][src] = in_port
 
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
 
