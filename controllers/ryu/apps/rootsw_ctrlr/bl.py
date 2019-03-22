@@ -10,8 +10,10 @@ from MySQLdb import connect
 from getpass import getpass
 from socket import socket, AF_INET, SOCK_STREAM
 from sys import stderr, exit
+from time import time
 
 def init_cxn(db_host, uname, passwd, db_name):
+    conn=None
     try:
         conn=connect(db_host, user=uname, passwd=passwd, db=db_name)
         print('[!]Connection successful to {} database...'.format(db_name))
@@ -65,9 +67,10 @@ class SimpleSwitch12(app_manager.RyuApp):
         #global definitions
         self.mac_to_port = {}
         self.blacklist=[]
+        self.counter=0
 
         #connect to db
-        db_host='192.168.43.38'
+        db_host='192.168.1.9'
         uname='ctrlr'
         passwd=getpass('[>]Enter passwd for uname {}: '.format(uname))
         db_name='network'
@@ -86,20 +89,25 @@ class SimpleSwitch12(app_manager.RyuApp):
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
 
-        match = datapath.ofproto_parser.OFPMatch(in_port=port,
-                                                 eth_dst=dst,
-                                                 eth_src=src)
-        if port not in self.blacklist:
+        idle_timeout=1
+        hard_timeout=5
+        priority=0
+        if actions!=[]:
             inst = [datapath.ofproto_parser.OFPInstructionActions(
                     ofproto.OFPIT_APPLY_ACTIONS, actions)]
+            match = datapath.ofproto_parser.OFPMatch(in_port=port, eth_dst=dst, eth_src=src)
         else:
             inst = [datapath.ofproto_parser.OFPInstructionActions(
                     ofproto.OFPIT_CLEAR_ACTIONS, [])]
+            match = datapath.ofproto_parser.OFPMatch(in_port=port)
+            idle_timeout=0
+            hard_timeout=0
+            priority=1
 
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, cookie=0, cookie_mask=0, table_id=0,
-            command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
-            priority=0, buffer_id=ofproto.OFP_NO_BUFFER,
+            command=ofproto.OFPFC_ADD, idle_timeout=idle_timeout, hard_timeout=hard_timeout,
+            priority=priority, buffer_id=ofproto.OFP_NO_BUFFER,
             out_port=ofproto.OFPP_ANY,
             out_group=ofproto.OFPG_ANY,
             flags=0, match=match, instructions=inst)
@@ -121,11 +129,6 @@ class SimpleSwitch12(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
 
-        #add blacklisting logic here
-        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
-            print('[!]Blacklisting {} port for dst {}'.format(in_port, dst))
-            self.blacklist.append(in_port)
-
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
@@ -134,8 +137,19 @@ class SimpleSwitch12(app_manager.RyuApp):
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
 
-        if in_port in self.blacklist:
-            out_port=ofproto.OFPP_IN_PORT
+        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
+            #blacklisting action
+            self.add_flow(datapath, in_port, dst, src, [])
+#            print('[!]Blacklisting {} port'.format(in_port))
+            if self.counter==0:
+                self.start_time=int(time()*1000000)%100000
+            curr_time=int(time()*1000000)%100000
+            print('[!]Diffrence is {}'.format(curr_time-self.start_time))
+            self.counter+=1
+#            print('[!]Avg is: {}'.format((self.counter/(curr_time-self.start_time))))
+            if in_port not in self.blacklist:
+                self.blacklist.append(in_port)
+            return
         elif dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
             #check here if contents of this match the self.mac, if yes, means arp is done, send to relay
