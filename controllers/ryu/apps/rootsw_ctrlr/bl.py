@@ -11,6 +11,9 @@ from getpass import getpass
 from socket import socket, AF_INET, SOCK_STREAM
 from sys import stderr, exit
 from time import time
+from importlib import import_module
+
+cfg=import_module('cfg', '.')
 
 def init_cxn(db_host, uname, passwd, db_name):
     conn=None
@@ -67,13 +70,12 @@ class SimpleSwitch12(app_manager.RyuApp):
         #global definitions
         self.mac_to_port = {}
         self.blacklist=[]
-        self.counter=0
 
         #connect to db
-        db_host='192.168.1.9'
-        uname='ctrlr'
+        db_host=cfg.db_host
+        uname='ctrlr' if cfg.uname==None else cfg.uname
         passwd=getpass('[>]Enter passwd for uname {}: '.format(uname))
-        db_name='network'
+        db_name='network' if cfg.db_name==None else cfg.db_name
         self.conn, self.cur=init_cxn(db_host, uname, passwd, db_name)
 
         #get hosts (all)
