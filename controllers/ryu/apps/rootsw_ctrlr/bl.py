@@ -45,23 +45,6 @@ def send_query(t, query):
     except Exception as e:
         stderr.write('[-]Error in executing query {}: {}'.format(query, e))
 
-def sock_create(addr):
-    try:
-        sock=socket(AF_INET, SOCK_STREAM)
-        sock.connect(addr)
-
-        print('[!]Succesfully connected to {}!'.format(addr))
-        return sock
-    except Exception as e:
-        stderr.write('[-]Error in connecting to {}: {}'.format(addr, e))
-        if sock!=None:
-            sock.close()
-        exit(-1)
-
-def get_self_ip():
-    sock=sock_create(('1.1.1.1', 80))
-    return sock.getsockname()[0]
-
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
 
