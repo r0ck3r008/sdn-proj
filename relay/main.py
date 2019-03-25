@@ -1,61 +1,43 @@
-from argsparse import ArgumentParser
+from argparse import ArgumentParser
 from importlib import import_module
 from multiprocessing import Process as process
-from os import mkfifo, path
-from sys import exit, stderr
-from errno import EEXIST
 
-uds_workings=import_module('uds_workings', '.')
-svr_workings=import_module('svr_workings', '.')
 utils=import_module('utils', '.')
+ids_workings=import_module('ids_workings', '.')
+uds_workings=import_module('uds_workings', '.')
 
-def parse_glbls(args):
+def init_glbls(args):
     glbls={}
     glbls['bind_addr']=args.bind_addr
     glbls['bind_port']=args.bind_port
-    glbls['uds_sock']='./uds' if args.uds_sock==None else args.uds_sock
-    glbls['pipe_name']='./pipe' if args.pipe_name==None else args.pipe_name
+    glbls['uds_sock_name']='./uds' if args.uds_sock_name==None else args.uds_sock_name
 
     return glbls
 
 if __name__=='__main__':
-    #arguments
+    #parse arguments
     parser=ArgumentParser()
-    parser.add_argument('-b', '--bind_addr', required=True, metavar='', dest='bind_addr', help='The address to bind to')
-    parser.add_argument('-p', '--bind_port', required=True, metavar='', dest='bind_port', type=int, help='The port to bind the realy on')
-    parser.add_argument('-uS', '--uds_sock', metavar='', dest='uds_sock', help="The URI of the UDS server (Default is './uds')")
-    parser.add_argument('-Pn', '--pipe_name', metavar='', dest='pipe_name', help="The pipe name (Default is './pipe')")
+    parser.add_argument('-b', '--bind_addr', required=True, metavar='', dest='bind_addr', help='The address to bind for relay')
+    parser.add_argument('-p', '--bind_port', required=True, metavar='', type=int, dest='bind_port', help='The port to bind for relay')
+    parser.add_argument('-uS', '--uds_sock_name', metavar='', dest='uds_sock_name', help="The URI of the UDS socket (Default is './uds')")
     args=parser.parse_args()
+    glbls=init_glbls(args)
 
-    #form globals
-    glbls=parse_glbls(args)
+    #form sockets
+    uds_sock=utils.sock_create(glbls['uds_sock_name'], 2)
+    ids_sock=utils.sock_create((glbls['bind_addr'], glbls['bind_port']), 0)
 
-    #form pipe
-    try:
-        mkfifo(glbls['pipe_name'])
-    except OSError as e:
-        stderr.write('[-]Error in opening pipe: {}'.format(e))
-        if e.error==EEXIST:
-            raise
+    #create processes
+    uds_svr_proc=process(target=uds_workings.uds_svr_loop, args=[uds_sock, ids_sock])
+    uds_svr_proc.start()
 
-    #form UDS socket
-    uds_sock=utils.sock_create(glbls['uds_sock'], 2)
+    ids_svr_proc=process(target=ids_workings.ids_svr_loop, args=[ids_sock, uds_sock, glbls['uds_sock_name']])
+    ids_svr_proc.start()
 
-    #form server socket
-    svr_sock=utils.sock_create((glbls['bind_addr'], glbls['bind_port']), 0)
-
-    #UDS handler
-    uds_proc=process(target=uds_workings.uds_loop, args=[uds_sock, glbls['pipe_name']])
-    uds_proc.start()
-
-    #svr handler
-    svr_proc=process(target=svr_workings.svr_loop, args=[svr_sock, glbls['uds_sock'], glbls['pipe_name']])
-    svr_proc.start()
-
-    #wait for finishing
-    uds_proc.join()
-    svr_proc.join()
+    #join
+    uds_svr_proc.join()
+    ids_svr_proc.join()
 
     #close sockets
     uds_sock.close()
-    svr_sock.close()
+    ids_sock.close()
