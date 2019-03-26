@@ -25,8 +25,6 @@ class SimpleSwitch12(app_manager.RyuApp):
         #global definitions
         self.mac_to_port = {}
         self.blacklist=[]
-#        self.blackhosts=[]
-#        self.mtx=lock()
         self.rel_addr=(cfg.rel_addr, cfg.rel_port)
 
         #start processes
@@ -133,16 +131,14 @@ class SimpleSwitch12(app_manager.RyuApp):
 
         with mtx:
             blackhosts_copy=blackhosts
-            print('[!]blackhosts: {}'.format(blackhosts))
 
-        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
+        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower() and dst not in self.blacklist:
             #blacklisting action
+            self.blacklist.append(in_port)
             self.add_flow(datapath, in_port, dst, src, [])
             bad_mac=self.find_bad_mac(in_port)
             self.logger.info('[!]Blacklisting {} port for MAC {}'.format(in_port, bad_mac))
             utils.snd(self.uplnk_sock, 'BLACKLIST={}'.format(bad_mac), self.rel_addr)
-            if in_port not in self.blacklist:
-                self.blacklist.append(in_port)
             return
         elif dst in blackhosts_copy:
             self.logger.info('[-]Forbidden destination {}!!'.format(dst))
