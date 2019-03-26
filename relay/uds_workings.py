@@ -36,14 +36,11 @@ def uds_svr_loop(uds_sock, ids_sock):
 def bcast_func(mtx):
     print('[!]Bcast thread started!!!')
     while True:
-#        mtx[1].acquire()
         with mtx[1]:
             if msgs:
                 cmds=msgs.pop()
-#            mtx[0].acquire()
                 with mtx[0]:
                     tags=clients.keys()
-                    print('[!]Broadcasting {}  to {} now!!'.format(cmds, tags))
                     for tag in tags:
                         try:
                             clients[tag].send(cmds.encode())
