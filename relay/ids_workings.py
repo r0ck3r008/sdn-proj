@@ -3,7 +3,6 @@ from threading import Thread as thread
 from importlib import import_module
 from sys import stderr, exit
 from time import sleep
-from randint import randint
 
 utils=import_module('utils', '.')
 
