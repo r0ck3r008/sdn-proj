@@ -28,3 +28,16 @@ def sock_create(addr, flag):
         if sock!=None:
             sock.close()
         exit(-1)
+
+def parse_suprelay_file(fname):
+    addrs=[]
+    try:
+        with open(fname, 'r') as f:
+            for s in f.readlines():
+                ip, port=s.strip().split(':')
+                addrs.appen((ip, port))
+        return addrs
+    except Exception as e:
+        stderr.write('[-]Error in parsing super-relay address file {}: {}'.format(fname, e))
+        exit(-1)
+
