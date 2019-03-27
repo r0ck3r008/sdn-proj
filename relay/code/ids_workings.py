@@ -48,7 +48,7 @@ def init_suprelay(suprelay_file, ids_sock, uds_sock_name):
         dwnlnk_sock=None
         try:
             uplnk_sock_sock=utils.sock_create(addr, 1)
-            dwnlnk_lnk_sock, _=suprelay_svr_sock.accept()
+            dwnlnk_sock, _=suprelay_svr_sock.accept()
             s_proc=process(target=handle_suprelay, args=[uplnk_sock, dwnlnk_sock, addr, suprelay_svr_sock, uds_sock_name]).start()
             uplnk_sock.close()
             dwnlnk_sock.close()
@@ -65,7 +65,7 @@ def handle_suprelay(uplnk_sock, dwnlnk_sock, addr, suprelay_svr_sock, uds_sock_n
     suprelay_svr_sock.close()
 
     #create threads
-    dwnlnk_thr=thread(target=handle_dwnlnk, args=[dwnlnk_lnk_sock, addr, uds_sock_name])
+    dwnlnk_thr=thread(target=handle_dwnlnk, args=[dwnlnk_sock, addr, uds_sock_name])
     dwnlnk_thr.start()
 
     uplnk_thr=thread(target=handle_uplnk, args=[addr, uds_sock_name, uplnk_sock])

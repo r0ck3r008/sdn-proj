@@ -35,7 +35,7 @@ def parse_suprelay_file(fname):
         with open(fname, 'r') as f:
             for s in f.readlines():
                 ip, port=s.strip().split(':')
-                addrs.appen((ip, port))
+                addrs.append((ip, int(port, 10)))
         return addrs
     except Exception as e:
         stderr.write('[-]Error in parsing super-relay address file {}: {}'.format(fname, e))
