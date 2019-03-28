@@ -53,6 +53,7 @@ class SimpleSwitch12(app_manager.RyuApp):
         #global definitions
         self.mac_to_port = {}
         self.blacklist=[]
+        self.count=0
 
         #connect to db
         db_host=cfg.db_host
@@ -126,7 +127,8 @@ class SimpleSwitch12(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        self.count+=1
+        self.logger.info("packet in %s %s %s %s %s", dpid, src, dst, in_port, self.count)
 
         if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
             #blacklisting action

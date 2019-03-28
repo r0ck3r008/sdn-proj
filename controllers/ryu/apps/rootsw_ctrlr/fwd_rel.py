@@ -24,6 +24,7 @@ class SimpleSwitch12(app_manager.RyuApp):
         super(SimpleSwitch12, self).__init__(*args, **kwargs)
         #global definitions
         self.mac_to_port = {}
+        self.count=0
         self.blacklist=[]
         self.rel_addr=(cfg.rel_addr, cfg.rel_port)
 
@@ -127,7 +128,8 @@ class SimpleSwitch12(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        self.count+=1
+        self.logger.info("packet in %s %s %s %s number %s", dpid, src, dst, in_port, self.count)
 
         with mtx:
             blackhosts_copy=blackhosts
