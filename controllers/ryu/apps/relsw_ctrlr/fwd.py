@@ -14,9 +14,7 @@ class SimpleSwitch12(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch12, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        self.counter=0
-        self.start_time=int(time()*1000000)/1000000
-        self.first_sec=0
+        self.count=0
 
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
@@ -42,11 +40,6 @@ class SimpleSwitch12(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         in_port = msg.match['in_port']
-#        self.counter+=1
-#        cur_time=int(time()*1000000)/1000000
-#        if self.counter==1:
-#            self.first_sec=cur_time-self.start_time
-#        print('[!]Counter is {} at {}th second, init was at {}'.format(self.counter, (cur_time-self.start_time), self.first_sec))
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -60,7 +53,8 @@ class SimpleSwitch12(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        self.count+=1
+        self.logger.info("packet in %s %s %s %s %s", dpid, src, dst, in_port, self.count)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
