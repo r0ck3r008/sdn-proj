@@ -10,7 +10,7 @@ def init_glbls(args):
     glbls={}
     glbls['bind_addr']=args.bind_addr
     glbls['bind_port']=args.bind_port
-    glbls['uds_sock_name']='./uds' if args.uds_sock_name==None else args.uds_sock_name
+    glbls['uds_sock_name']='./sock' if args.uds_sock_name==None else args.uds_sock_name
     glbls['suprelay_file']=args.suprelay_file
 
     return glbls
