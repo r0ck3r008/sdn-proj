@@ -66,7 +66,7 @@ def parse_ctrlr_file(fname):
 #topo is {"ctrlr ip": [["root_sw"], ["hosts"]]}
 def init_subnets(net, ctrlr_ip, n_subnets, n_hosts):
     topo={}
-    
+
     for i in range(n_subnets):
         topo[ctrlr_ip[i]]=[[], []]
         sw=net.addSwitch('s{}'.format(i+1))
