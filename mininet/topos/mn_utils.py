@@ -7,6 +7,7 @@ from importlib import import_module
 from libnacl import randombytes_uniform as ru, sodium_init
 
 db_handler=import_module('db_handler', '.')
+viral=import_module('viral', '.')
 
 def parse_ctrlr_file(fname):
     ctrlr_ip=[]
@@ -129,6 +130,7 @@ def mn_utils(args):
 
     #form subnets
     topo=init_subnets(net, ctrlr_ip, args.subnets, args.hosts)
+    topo_dup=topo
 
     #form relay switches
     rel_sw=init_rel_sw(net, args.rel_sw, args.subnets)
@@ -151,6 +153,9 @@ def mn_utils(args):
 
     #init switches
     init_switches(ctrlrs, topo, rel_sw)
+
+    #viral the attack
+    viral.init_viral_works(topo_dup)
 
     #init cli
     cli(net)
