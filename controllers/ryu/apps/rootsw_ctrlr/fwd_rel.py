@@ -16,6 +16,7 @@ utils=import_module('utils', '.')
 
 mtx=lock()
 blackhosts=[]
+dwnlnk_mtx=lock()
 
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
@@ -66,9 +67,8 @@ class SimpleSwitch12(app_manager.RyuApp):
             inst = [datapath.ofproto_parser.OFPInstructionActions(
                     ofproto.OFPIT_CLEAR_ACTIONS, [])]
             match = datapath.ofproto_parser.OFPMatch(in_port=port)
-            idle_timeout=0
-            hard_timeout=0
-            priority=1
+            idle_timeout=2
+            hard_timeout=2
 
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, cookie=0, cookie_mask=0, table_id=0,
@@ -95,13 +95,20 @@ class SimpleSwitch12(app_manager.RyuApp):
 
             i=0
             while True:
-                cmdr=utils.rcv(sock, addr)
+                with dwnlnk_mtx:
+                    cmdr=utils.rcv(sock, addr)
                 print('[!]Received {} from relay'.format(cmdr))
-                app=cmdr.split('=')[1]
-                with mtx:
-                    if app not in blackhosts:
-                        blackhosts.append(app)
-                        print('[!]Appended {} to blackhosts {}'.format(app, blackhosts))
+                cmd, app=cmdr.split('=')
+                if cmd=='BLACKLIST':
+                    with mtx:
+                        if app not in blackhosts:
+                            blackhosts.append(app)
+                            print('[!]Appended {} to blackhosts'.format(app))
+                else:
+                    with mtx:
+                        if app in blackhosts:
+                            blackhosts.remove(app)
+                            print('[!]Removed {} from blackhosts'.format(app))
         except Exception as e:
             stderr.write('[-]Error in dwnlnk_svr_loop: {}'.format(e))
             self.dwnlnk_svr_sock.close()
@@ -131,18 +138,13 @@ class SimpleSwitch12(app_manager.RyuApp):
         self.count+=1
         self.logger.info("packet in %s %s %s %s number %s", dpid, src, dst, in_port, self.count)
 
-        with mtx:
-            blackhosts_copy=blackhosts
-
-        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower() and dst not in self.blacklist:
-            #blacklisting action
-            self.blacklist.append(in_port)
+        if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
             self.add_flow(datapath, in_port, dst, src, [])
             bad_mac=self.find_bad_mac(in_port)
             self.logger.info('[!]Blacklisting {} port for MAC {}'.format(in_port, bad_mac))
             utils.snd(self.uplnk_sock, 'BLACKLIST={}'.format(bad_mac), self.rel_addr)
             return
-        elif dst in blackhosts_copy:
+        elif dst in blackhosts:
             self.logger.info('[-]Forbidden destination {}!!'.format(dst))
             self.add_flow(datapath, in_port, dst, src, [])
             return
@@ -150,6 +152,10 @@ class SimpleSwitch12(app_manager.RyuApp):
             out_port = self.mac_to_port[dpid][dst]
         else:
             out_port = ofproto.OFPP_FLOOD
+
+        if src in blackhosts:
+            self.logger.info('[!]Whitelisting {} port for MAC {}'.format(in_port, src))
+            utils.snd(self.uplnk_sock, 'WHITELIST={}'.format(src), self.rel_addr)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
