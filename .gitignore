@@ -6,6 +6,7 @@ relay/code/try*
 controllers/ryu/apps/*.pyc
 controllers/ryu/apps/rootsw_ctrlr/*.pyc
 controllers/ryu/apps/relsw_ctrlr/*.pyc
+controllers/ryu/apps/rootsw_ctrlr/__pycache__
 controllers/librelay/librelay.so
 pox/*
 controllers/pox/ext/*.pyc
