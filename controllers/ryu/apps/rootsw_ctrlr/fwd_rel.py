@@ -8,15 +8,13 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from getpass import getpass
 from importlib import import_module
-from threading import Lock as lock, Thread as thread
+from multiprocessing import Process as process
 from sys import stderr, exit
+from time import sleep
 
 cfg=import_module('cfg', '.')
 utils=import_module('utils', '.')
-
-mtx=lock()
-blackhosts=[]
-dwnlnk_mtx=lock()
+dwnlnk_svr=import_module('dwnlnk_svr', '.')
 
 class SimpleSwitch12(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
@@ -26,22 +24,29 @@ class SimpleSwitch12(app_manager.RyuApp):
         #global definitions
         self.mac_to_port = {}
         self.count=0
-        self.blacklist=[]
+        self.blackhosts=[]
+        self.self_ip=utils.get_self_ip()
         self.rel_addr=(cfg.rel_addr, cfg.rel_port)
-
-        #start processes
-        self.dwnlnk_svr_sock=utils.sock_create((utils.get_self_ip(), 12346), 0)
-        self.dwnlnk_svr_proc=thread(target=self.dwnlnk_svr_loop)
-        self.dwnlnk_svr_proc.start()
-
-        self.uplnk_sock=utils.sock_create(self.rel_addr, 1)
-
-        #connect to db
         db_host=cfg.db_host
         uname='ctrlr' if cfg.uname==None else cfg.uname
-        passwd=getpass('[>]Enter passwd for uname {}: '.format(uname))
         db_name='network' if cfg.db_name==None else cfg.db_name
+
+        #dwnlnk svr
+        self.dwnlnk_svr_proc=process(target=dwnlnk_svr.init_dwnlnk_svr,
+                args=[getpass('[>]Enter passwd for uname {}: '.format(uname)),])
+        self.dwnlnk_svr_proc.start()
+
+        #up link socket connection
+        self.uplnk_sock=utils.sock_create(self.rel_addr, 1)
+
+        sleep(1)
+
+        #get passwd
+        passwd=getpass('[>]Enter passwd for uname {}: '.format(uname))
+
+        #connect to db
         self.conn, self.cur=utils.init_db_cxn(db_host, uname, passwd, db_name)
+        self.ctrlr_conn, self.ctrlr_cur= utils.init_db_cxn(db_host, uname, passwd, "ctrlrs")
 
         #get hosts (all)
         tables=utils.send_query((self.conn, self.cur), "SHOW TABLES;")
@@ -52,6 +57,9 @@ class SimpleSwitch12(app_manager.RyuApp):
                 self.hosts.append(r)
 
         print('[!]Self hosts are {}'.format(self.hosts))
+
+    def __del__(self):
+        self.dwnlnk_svr_proc.join()
 
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
@@ -86,36 +94,6 @@ class SimpleSwitch12(app_manager.RyuApp):
 
         return macs[ports.index(in_port)]
 
-    def dwnlnk_svr_loop(self):
-        print('[!]Started downlink server loop')
-        sock=None
-        try:
-            sock, addr=self.dwnlnk_svr_sock.accept()
-            print('[!]Got connection back from {}'.format(addr))
-
-            i=0
-            while True:
-                with dwnlnk_mtx:
-                    cmdr=utils.rcv(sock, addr)
-                print('[!]Received {} from relay'.format(cmdr))
-                cmd, app=cmdr.split('=')
-                if cmd=='BLACKLIST':
-                    with mtx:
-                        if app not in blackhosts:
-                            blackhosts.append(app)
-                            print('[!]Appended {} to blackhosts'.format(app))
-                else:
-                    with mtx:
-                        if app in blackhosts:
-                            blackhosts.remove(app)
-                            print('[!]Removed {} from blackhosts'.format(app))
-        except Exception as e:
-            stderr.write('[-]Error in dwnlnk_svr_loop: {}'.format(e))
-            self.dwnlnk_svr_sock.close()
-            if sock!=None:
-                sock.close()
-            exit(-1)
-
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
@@ -138,13 +116,17 @@ class SimpleSwitch12(app_manager.RyuApp):
         self.count+=1
         self.logger.info("packet in %s %s %s %s number %s", dpid, src, dst, in_port, self.count)
 
+        if self.count%20==0 and self.count!=0:
+            #update ctrlr db
+            self.blackhosts=utils.send_query((self.ctrlr_conn, self.ctrlr_cur), "SELECT * FROM `{}`;".format(self.self_ip))
+
         if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
             self.add_flow(datapath, in_port, dst, src, [])
             bad_mac=self.find_bad_mac(in_port)
             self.logger.info('[!]Blacklisting {} port for MAC {}'.format(in_port, bad_mac))
             utils.snd(self.uplnk_sock, 'BLACKLIST={}'.format(bad_mac), self.rel_addr)
             return
-        elif dst in blackhosts:
+        elif dst in self.blackhosts:
             self.logger.info('[-]Forbidden destination {}!!'.format(dst))
             self.add_flow(datapath, in_port, dst, src, [])
             return
@@ -153,7 +135,7 @@ class SimpleSwitch12(app_manager.RyuApp):
         else:
             out_port = ofproto.OFPP_FLOOD
 
-        if src in blackhosts:
+        if src in self.blackhosts:
             self.logger.info('[!]Whitelisting {} port for MAC {}'.format(in_port, src))
             utils.snd(self.uplnk_sock, 'WHITELIST={}'.format(src), self.rel_addr)
 

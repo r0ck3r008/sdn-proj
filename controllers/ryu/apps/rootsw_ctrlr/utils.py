@@ -9,7 +9,7 @@ def init_db_cxn(db_host, uname, passwd, db_name):
         print('[!]Successfully connected to database {} under username {}'.format(db_name, uname))
 
         cur=conn.cursor()
-        
+
         return (conn, cur)
     except Exception as e:
         stderr.write('[-]Error in connecting to db under uname {}: {}'.format(uname, e))
@@ -19,14 +19,14 @@ def init_db_cxn(db_host, uname, passwd, db_name):
 
 def send_query(t, query):
     try:
-        if 'update' in query.lower() or 'insert' in query.lower() or 'delete' in query.lower():
-            stderr.write('[-]You dont have permission to alter database!!!')
-            t[0].close()
-            exit(-1)
-
         t[1].execute(query)
+        print('[!]Executed query {}'.format(query))
+        if 'insert' in query.lower() or 'delete' in query.lower() or 'create' in query.lower():
+            t[0].commit()
+            return
+
         rows=t[1].fetchall()
-        
+
         ret=[]
         for r in rows:
             ret.append(r[0])
