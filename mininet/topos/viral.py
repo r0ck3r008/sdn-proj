@@ -27,7 +27,8 @@ def select_hosts(hosts):
     sel_hosts.append(bad_s)
 
     #select zombies
-    n_zom=(len(hosts))%10
+    ten_pcent=len(hosts)/10
+    n_zom=ten_pcent if ten_pcent!=0 else 1
     for i in range(n_zom):
         sel_hosts.append(choice(hosts))
 
