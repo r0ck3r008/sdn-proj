@@ -9,7 +9,6 @@ def dwnlnk_svr_loop(dwnlnk_svr_sock, db_host, uname, passwd, db_name):
     sock=None
     try:
         conn, cur=utils.init_db_cxn(db_host, uname, passwd, db_name)
-        print('[!]Conn is {}'.format(conn))
 
         #create table
         utils.send_query((conn, cur), "CREATE TABLE `{}` (mac varchar(50));".format(self_ip))
@@ -19,18 +18,18 @@ def dwnlnk_svr_loop(dwnlnk_svr_sock, db_host, uname, passwd, db_name):
         #get connection
         blacklist=[]
 
-        #make table
-        utils.send_query((conn, cur), "CREATE TABLE `{}` (mac varchar(50));".format(self_ip))
-
         while True:
             cmdr=utils.rcv(sock, addr)
+            if len(cmdr)>30:
+                continue
+
             print('[!]Received {} from relay'.format(cmdr))
             cmd, app=cmdr.split('=')
             if cmd=='BLACKLIST':
                 #query
                 if app not in blacklist:
                     utils.send_query((conn, cur), "INSERT INTO `{}` VALUES ('{}');".format(self_ip, app))
-                    blacklist.append(mac)
+                    blacklist.append(app)
                     print('[!]Appended {} to blackhosts'.format(app))
             else:
                 #query
