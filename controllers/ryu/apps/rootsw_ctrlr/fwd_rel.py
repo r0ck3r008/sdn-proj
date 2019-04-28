@@ -8,7 +8,6 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from getpass import getpass
 from importlib import import_module
-from multiprocessing import Process as process
 from sys import stderr, exit
 from time import sleep
 
@@ -23,6 +22,8 @@ class SimpleSwitch12(app_manager.RyuApp):
         super(SimpleSwitch12, self).__init__(*args, **kwargs)
         #global definitions
         self.mac_to_port = {}
+        self.lgit_count=0
+        self.il_lgit_count=0
         self.count=0
         self.blackhosts=[]
         self.self_ip=utils.get_self_ip()
@@ -30,11 +31,6 @@ class SimpleSwitch12(app_manager.RyuApp):
         db_host=cfg.db_host
         uname='ctrlr' if cfg.uname==None else cfg.uname
         db_name='network' if cfg.db_name==None else cfg.db_name
-
-        #dwnlnk svr
-        self.dwnlnk_svr_proc=process(target=dwnlnk_svr.init_dwnlnk_svr,
-                args=[getpass('[>]Enter passwd for uname {}: '.format(uname)),])
-        self.dwnlnk_svr_proc.start()
 
         #up link socket connection
         self.uplnk_sock=utils.sock_create(self.rel_addr, 1)
@@ -57,9 +53,6 @@ class SimpleSwitch12(app_manager.RyuApp):
                 self.hosts.append(r)
 
         print('[!]Self hosts are {}'.format(self.hosts))
-
-    def __del__(self):
-        self.dwnlnk_svr_proc.join()
 
     def add_flow(self, datapath, port, dst, src, actions):
         ofproto = datapath.ofproto
@@ -113,14 +106,15 @@ class SimpleSwitch12(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
+        self.logger.info("packet in %s %s %s %s number %s/%s", dpid, src, dst, in_port, self.il_lgit_count, self.lgit_count)
         self.count+=1
-        self.logger.info("packet in %s %s %s %s number %s", dpid, src, dst, in_port, self.count)
 
-        if self.count%20==0 and self.count!=0:
+        if self.count%20==0:
             #update ctrlr db
             self.blackhosts=utils.send_query((self.ctrlr_conn, self.ctrlr_cur), "SELECT * FROM `{}`;".format(self.self_ip))
 
         if dst not in self.hosts and dst!='ff:ff:ff:ff:ff:ff' and '33:33' not in dst.lower():
+            self.il_lgit_count+=1
             self.add_flow(datapath, in_port, dst, src, [])
             bad_mac=self.find_bad_mac(in_port)
             self.logger.info('[!]Blacklisting {} port for MAC {}'.format(in_port, bad_mac))
@@ -138,6 +132,7 @@ class SimpleSwitch12(app_manager.RyuApp):
         if src in self.blackhosts:
             self.logger.info('[!]Whitelisting {} port for MAC {}'.format(in_port, src))
             utils.snd(self.uplnk_sock, 'WHITELIST={}'.format(src), self.rel_addr)
+        self.lgit_count+=1
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
