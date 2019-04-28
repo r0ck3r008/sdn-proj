@@ -1,9 +1,10 @@
 from socket import socket, AF_INET, SOCK_STREAM, AF_UNIX
-from os import mkfifo, system
+from os import mkfifo, system, popen
 from argparse import ArgumentParser
 from sys import stderr, exit
 from threading import Thread as thread, Lock as lock
 from multiprocessing import Process as process
+from time import sleep
 
 def sock_create(addr, flag):
     sock=None
@@ -62,9 +63,14 @@ def pipe_functions():
     while True:
         cmdr=None
         with open('./pipe', 'r') as pipe:
-            cmdr=pipe.read().strip()
+            while True:
+                cmd=pipe.read()
+                if len(cmd)==0:
+                    break
+                else:
+                    cmdr=cmd.strip()
         if cmdr=='trigger':
-            #send to uds clients
+        #send to uds clients
             uds_sock.send(cmdr)
 
 def uds_cli_run(sock, uds_clients, uds_mtx):
@@ -99,11 +105,11 @@ if __name__=='__main__':
     parser.add_argument('-i', '--ip', required=True, metavar='', dest='ip', help='The ip of the default interface')
     argument=parser.parse_args()
 
-    svr_proc=process(target=svr_functions, args=[argument.ip, ])
-    svr_proc.start()
-
     uds_proc=process(target=uds_functions)
     uds_proc.start()
+
+    svr_proc=process(target=svr_functions, args=[argument.ip, ])
+    svr_proc.start()
 
     pipe_proc=process(target=pipe_functions)
     pipe_proc.start()
